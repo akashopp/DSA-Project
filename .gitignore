@@ -1,0 +1,32 @@
+# Logs and temporary files
+logs
+*.log
+*-debug.log*
+
+# Dependency directories
+node_modules
+
+# Build output
+dist
+dist-ssr
+
+# Local development settings
+*.local
+
+# Editor settings
+.vscode/*
+!.vscode/extensions.json
+.idea
+
+# OS-specific files
+.DS_Store
+
+# IDE files
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Environment variables
+*.env
