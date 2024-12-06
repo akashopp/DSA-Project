@@ -8,8 +8,8 @@ const router = express.Router();
 router.route("/register").post(CreateUser);
 router.route("/getuser").get(getUser);
 router.route("/getproblems/:id").get(getUserSolved)
-router.route("/addproblem").get(AddProblem)
-router.route("/deleteproblem").delete(DeleteProblem)
+router.route("/addproblem").put(AddProblem)
+router.route("/deleteproblem").put(DeleteProblem)
 
 // router.route("/getuser").get(getUser);
 // router.route("/delete/:id").delete(deleteUser);

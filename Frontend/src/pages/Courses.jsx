@@ -1,6 +1,6 @@
 // Courses.jsx
 import React, { useState } from 'react';
-import Box from '../component/Box';
+import Box from '../components/Box';
 import CardImg from "../assets/CardImage.png"
 import { useNavigate } from 'react-router-dom';
 

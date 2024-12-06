@@ -1,9 +1,9 @@
 import React from 'react'
-import Problems from '../component/Problems'
-import Arrays from '../component/Arrays'
-import BinarySearch from '../component/BinarySearch'
-import Greedy from '../component/Greedy'
-import DynamicProgramming from '../component/DynamicProgramming'
+import Problems from '../components/Problems'
+import Arrays from '../components/Arrays'
+import BinarySearch from '../components/BinarySearch'
+import Greedy from '../components/Greedy'
+import DynamicProgramming from '../components/DynamicProgramming'
 
 function Practice() {
   return (
@@ -11,10 +11,6 @@ function Practice() {
       Practice Page
       <div>
         <Problems/>
-        <Arrays/>
-        <BinarySearch/>
-        <Greedy/>
-        <DynamicProgramming/>
       </div>
     </div>
   )

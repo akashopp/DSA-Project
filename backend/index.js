@@ -5,11 +5,13 @@ import dotenv from "dotenv";
 import cors from "cors";
 
 import userRoutes from "./routes/user.routes.js"
+import problemRoutes from "./routes/problem.routes.js"
 
 app.use(express.json());
 app.use(cors());
 
 app.use("/user", userRoutes);
+app.use("/problems", problemRoutes);
 
 dotenv.config();
 

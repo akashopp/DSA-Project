@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const problemSchema = new mongoose.Schema({
   problemName: {
@@ -13,17 +13,12 @@ const problemSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
-  status: {
-    type: Boolean,
-    required: true,
-  },
   url: {
     type: String,
     required: true,
   },
 });
 
-// Create the Problem model using the schema
+// Default export
 const Problem = mongoose.model('Problem', problemSchema);
-
-module.exports = Problem;
+export default Problem;  // Use default export
