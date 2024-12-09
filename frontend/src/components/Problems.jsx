@@ -23,7 +23,7 @@ function Problems() {
   const [groupedProblems, setGroupedProblems] = useState({}); // Store the grouped problems by topic
   const [userProblems, setUserProblems] = useState([]); // Store the user's problemId list
 
-  const userId = '67529ae976dea13c3d50fbf3'; // This should come from authentication or session data.
+  const userId = '67529af276dea13c3d50fbf6'; // This should come from authentication or session data.
 
   // Fetch problems from the API
   const fetchProblems = async () => {
