@@ -108,22 +108,22 @@ function Problems() {
   };
 
   return (
-    <div className="flex-1 p-4 bg-gray-900 text-white">
+    <div className="flex-1 bg-slate text-white font-extrabold">
       {/* Render each topic section */}
       {Object.keys(groupedProblems).map((topic) => (
         <div key={topic} className="mb-4">
           {/* Topic Header */}
           <div
-            className="flex justify-between mb-2 cursor-pointer"
+            className="flex justify-center mb-2 cursor-pointer p-5 bg-slate-900"
             onClick={() => toggleTopic(topic)}
           >
-            <div className="text-lg">{topic}</div>
-            <div>{isExpanded[topic] ? '▲' : '▼'}</div>
+            <div className="text-xl">{topic}</div>
+            <div className='mx-5'>{isExpanded[topic] ? '▲' : '▼'}</div>
           </div>
 
           {/* Problem List (Only shown if the topic is expanded) */}
           <div
-            className={`overflow-hidden transition-all duration-300 ease-in-out ${isExpanded[topic] ? 'max-h-screen opacity-100' : 'max-h-0 opacity-0'}`}
+            className={`overflow-hidden transition-all duration-700 ease-in-out ${isExpanded[topic] ? 'max-h-screen opacity-100' : 'max-h-0 opacity-0'} `}
           >
             <table className="w-full table-auto bg-gray-800 rounded-lg overflow-hidden">
               <thead className="bg-gray-700">

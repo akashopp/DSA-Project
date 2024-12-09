@@ -7,12 +7,9 @@ import DynamicProgramming from '../components/DynamicProgramming'
 
 function Practice() {
   return (
-    <div className='text-white bg-green-500 justify-center '>
-      Practice Page
-      <div>
-        <Problems/>
-      </div>
-    </div>
+    <>
+      <Problems/>
+    </>
   )
 }
 
