@@ -1,16 +1,28 @@
 import React, { useState, useEffect } from 'react';
 
-// ProblemManager class to handle grouping by topic
+// ProblemManager class to handle grouping and sorting by difficulty
 class ProblemManager {
   static groupByTopic(problems) {
     const grouped = {};
 
-    // Group problems by their topic name
+    // Define difficulty levels for sorting
+    const difficultyOrder = {
+      'Easy': 0,
+      'Medium': 1,
+      'Hard': 2,
+    };
+
+    // Group problems by their topic name and sort by difficulty
     problems.forEach((problem) => {
       if (!grouped[problem.topic]) {
         grouped[problem.topic] = [];
       }
       grouped[problem.topic].push(problem);
+    });
+
+    // Sort problems within each topic based on difficulty
+    Object.keys(grouped).forEach((topic) => {
+      grouped[topic].sort((a, b) => difficultyOrder[a.difficulty] - difficultyOrder[b.difficulty]);
     });
 
     return grouped;
