@@ -1,4 +1,3 @@
-// api/run.js
 import { exec } from 'child_process';
 import fs from 'fs';
 import path from 'path';
@@ -24,9 +23,13 @@ export default async (req, res) => {
         ? 'Solution'
         : 'solution.py';
 
-    // Write user code to the respective file
+    // Use the /tmp directory in Vercel to store the file
+    const tempDir = '/tmp'; // Vercel provides a temporary file system at /tmp
+    const filePath = path.join(tempDir, filename);
+    
+    // Write user code to the respective file in the temporary directory
     try {
-      fs.writeFileSync(path.join(__dirname, filename), code);
+      fs.writeFileSync(filePath, code);
     } catch (err) {
       return res.status(500).json({ output: `File write error: ${err.message}` });
     }
@@ -35,14 +38,14 @@ export default async (req, res) => {
     let compileCmd, runCmd;
 
     if (language === 'cpp') {
-      compileCmd = `g++ -o ${execFileName} ${filename}`;
+      compileCmd = `g++ -o ${execFileName} ${filePath}`;
       runCmd = `./${execFileName}`;
     } else if (language === 'java') {
-      compileCmd = `javac ${filename}`;
-      runCmd = `java ${execFileName}`;
+      compileCmd = `javac ${filePath}`;
+      runCmd = `java -cp ${tempDir} ${execFileName}`; // Use the /tmp directory for running Java
     } else if (language === 'python') {
       compileCmd = 'python --version'; // No compilation step for Python
-      runCmd = `python ${filename}`;
+      runCmd = `python ${filePath}`;
     } else {
       return res.status(400).json({ output: 'Unsupported language' });
     }
