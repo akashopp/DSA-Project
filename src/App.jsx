@@ -44,7 +44,7 @@ public class Solution {
 
     try {
       // Send the code and input to the backend
-      const response = await axios.post('http://localhost:5000/run', {
+      const response = await axios.post('https://code-runner-steel.vercel.app/api/run', {
         language: language, // Send the selected language
         code: code,
         input: input, // Send the input entered by the user
