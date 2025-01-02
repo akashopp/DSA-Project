@@ -85,40 +85,6 @@ function Problems() {
     }));
   };
 
-  // Handle checkbox change, marking a problem as solved
-  const toggleProblemStatus = async (index, topic) => {
-    const problemId = groupedProblems[topic][index]._id; // Get the problem's ID
-    const isProblemSolved = userProblems.includes(problemId); // Check if the problem is in the user's list
-
-    try {
-      // Send a PUT request to update the user's problem list
-      const url = isProblemSolved
-        ? 'http://localhost:5000/user/deleteproblem' // If problem is solved, we need to remove it
-        : 'http://localhost:5000/user/addproblem'; // If problem is not solved, we add it
-
-      const response = await fetch(url, {
-        method: 'PUT', // Use PUT for both adding and deleting problems
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          userId, // The current user's ID
-          problemId, // The ID of the problem being toggled
-        }),
-      });
-
-      if (response.ok) {
-        // After the problem status is updated, reload the problems and user problems
-        fetchProblems(); // Fetch updated problems
-        fetchUserProblems(); // Fetch updated user problems list
-      } else {
-        console.error('Failed to update user problem list');
-      }
-    } catch (error) {
-      console.error('Error updating user problem list:', error);
-    }
-  };
-
   return (
     <div className="flex-1 bg-slate text-white font-extrabold">
       {/* Render each topic section */}
@@ -135,7 +101,11 @@ function Problems() {
 
           {/* Problem List (Only shown if the topic is expanded) */}
           <div
-            className={`overflow-hidden transition-all duration-700 ease-in-out ${isExpanded[topic] ? 'max-h-screen opacity-100' : 'max-h-0 opacity-0'} `}
+            style={{
+              maxHeight: isExpanded[topic] ? '1000px' : '0px',
+              overflow: 'hidden',
+              transition: 'max-height 0.5s ease-in-out',
+            }}
           >
             <table className="w-full table-auto bg-gray-800 rounded-lg overflow-hidden">
               <thead className="bg-gray-700">
@@ -147,7 +117,8 @@ function Problems() {
               </thead>
               <tbody>
                 {groupedProblems[topic].map((item, index) => (
-                  <React.Fragment key={item._id || index}> {/* Use a unique key for each item */}
+                  <React.Fragment key={item._id || index}>
+                    {/* Use a unique key for each item */}
                     <tr className="bg-gray-800 hover:bg-gray-700 cursor-pointer">
                       <td className="p-3">
                         {/* Checkbox with explicit styling */}
