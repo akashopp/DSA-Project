@@ -10,7 +10,6 @@ int main() {
       if(a[i] + a[j] == sum) {
         cout << i << " " << j << endl;
         return 0;
-        
       }
     }
   }
