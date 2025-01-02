@@ -245,8 +245,8 @@ public class Solution {
   const editorExtensions = [
     basicSetup,
     ...languages[language],
-    autocompletion(),
-    closeBrackets(),
+    // autocompletion(),
+    // closeBrackets(),
     // Explicitly set the tab size and indent unit here
     EditorState.tabSize.of(4)
   ];
@@ -286,7 +286,6 @@ public class Solution {
               <option value="cpp">C++</option>
               <option value="java">Java</option>
               <option value="python">Python</option>
-              <option value="javascript">JavaScript</option>
             </select>
 
             <select

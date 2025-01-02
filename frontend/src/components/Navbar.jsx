@@ -46,6 +46,9 @@ function Navbar() {
           <Link to="/practice" className="hover:text-gray-300 transition-colors text-white font-extrabold">
             Practice
           </Link>
+          <Link to="/submit" className="hover:text-gray-300 transition-colors text-white font-extrabold">
+            Submit
+          </Link>
         </div>
       </div>
 
