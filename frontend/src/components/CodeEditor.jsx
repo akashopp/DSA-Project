@@ -80,8 +80,16 @@ public class Solution {
     setTestCases([]);
     setError("");
     try {
-      const response = await fetch(`http://localhost:5000/testcases/${problemName}`);
+      const response = await fetch('http://localhost:5000/testcases', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ problemName }), // Send the problem name in the request body
+      });
+  
       const data = await response.json();
+  
       if (!response.ok) {
         setError("Failed to fetch valid test cases.");
       } else {
@@ -93,6 +101,7 @@ public class Solution {
       setLoading(false);
     }
   };
+  
 
   useEffect(() => {
     if (problemName) {

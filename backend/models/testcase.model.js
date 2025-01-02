@@ -1,24 +1,23 @@
 import mongoose from 'mongoose';
 
-// Define the schema for the test cases
-const testCaseSchema = new mongoose.Schema({
+const TestCaseSchema = new mongoose.Schema({
   name: {
     type: String,
-    required: true, // Name of the problem (e.g., "Two Sum")
+    required: true,
   },
-  tests: [{
-    input: {
-      type: String,
-      required: true, // Input for the test case
+  tests: [
+    {
+      inputFileId: {
+        type: mongoose.Schema.Types.ObjectId,
+        required: true,
+      },
+      outputFileId: {
+        type: mongoose.Schema.Types.ObjectId,
+        required: true,
+      },
     },
-    output: {
-      type: String,
-      required: true, // Expected output for the test case
-    }
-  }]
-}, { timestamps: true });
+  ],
+});
 
-// Create the model for test cases
-const TestCase = mongoose.model('TestCase', testCaseSchema);
-
-export default TestCase;
+const testcase = mongoose.model('testcase', TestCaseSchema);
+export default testcase;
