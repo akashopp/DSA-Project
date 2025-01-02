@@ -6,7 +6,12 @@ import testcase from './models/testcase.model.js'; // Assuming TestCase model is
 dotenv.config();
 
 // MongoDB connection
-mongoose.connect(process.env.URI).then(() => {
+mongoose.connect(process.env.URI, { 
+    useNewUrlParser: true, 
+    useUnifiedTopology: true, 
+    serverSelectionTimeoutMS: 5000, 
+    socketTimeoutMS: 5000
+}).then(() => {
     console.log("MongoDB connected successfully");
 }).catch((error) => {
     console.error("Error connecting to MongoDB:", error);
@@ -30,13 +35,7 @@ const fileExists = async (fileId) => {
     try {
         // Check if file exists by querying GridFS metadata
         const files = await gfs.find({ _id: new mongoose.Types.ObjectId(fileId) }).toArray();
-        if (files.length > 0) {
-            console.log(`File with ID ${fileId} found in GridFS.`);
-            return true;
-        } else {
-            console.log(`File with ID ${fileId} not found.`);
-            return false;
-        }
+        return files.length > 0;
     } catch (error) {
         console.error("Error checking if file exists:", error);
         return false;
@@ -66,10 +65,11 @@ export const getTestCases = async (problemName) => {
 
         const testCaseResults = [];
 
-        for (const testCase of testCases) {
+        // Process all test cases in parallel
+        await Promise.all(testCases.map(async (testCase) => {
             const tests = testCase.tests;
 
-            for (const test of tests) {
+            await Promise.all(tests.map(async (test) => {
                 const { inputFileId, outputFileId } = test;
 
                 console.log('Test inputFileId:', inputFileId, 'outputFileId:', outputFileId);
@@ -78,61 +78,56 @@ export const getTestCases = async (problemName) => {
                     !mongoose.Types.ObjectId.isValid(inputFileId) ||
                     !mongoose.Types.ObjectId.isValid(outputFileId)) {
                     console.log('Invalid file IDs:', inputFileId, outputFileId);
-                    continue;
+                    return;
                 }
 
-                // Check if the files exist
-                const inputFileExists = await fileExists(inputFileId);
-                const outputFileExists = await fileExists(outputFileId);
+                // Check if the files exist in parallel
+                const [inputFileExists, outputFileExists] = await Promise.all([
+                    fileExists(inputFileId),
+                    fileExists(outputFileId),
+                ]);
 
                 if (!inputFileExists || !outputFileExists) {
                     console.log(`File not found for inputFileId: ${inputFileId} or outputFileId: ${outputFileId}`);
-                    continue;
+                    return;
                 }
 
-                // Retrieve file streams
-                const inputStream = getFileStream(inputFileId);
-                const outputStream = getFileStream(outputFileId);
+                // Retrieve file streams in parallel
+                const [inputStream, outputStream] = await Promise.all([
+                    getFileStream(inputFileId),
+                    getFileStream(outputFileId),
+                ]);
 
                 if (!inputStream || !outputStream) {
                     console.log(`Error retrieving file streams for inputFileId: ${inputFileId} or outputFileId: ${outputFileId}`);
-                    continue;
+                    return;
                 }
 
-                let inputData = '';
-                let outputData = '';
+                // Read file data asynchronously
+                const inputData = await streamToString(inputStream);
+                const outputData = await streamToString(outputStream);
 
-                // Read file data
-                inputStream.on('data', chunk => inputData += chunk.toString());
-                outputStream.on('data', chunk => outputData += chunk.toString());
-
-                await new Promise((resolve, reject) => {
-                    inputStream.on('end', () => {
-                        outputStream.on('end', () => {
-                            testCaseResults.push({
-                                name: testCase.name,
-                                input: inputData,
-                                output: outputData,
-                            });
-                            resolve();
-                        });
-                    });
-
-                    inputStream.on('error', (error) => {
-                        console.error("Error reading input file:", error);
-                        reject(error);
-                    });
-                    outputStream.on('error', (error) => {
-                        console.error("Error reading output file:", error);
-                        reject(error);
-                    });
+                testCaseResults.push({
+                    name: testCase.name,
+                    input: inputData,
+                    output: outputData,
                 });
-            }
-        }
+            }));
+        }));
 
         return { testCases: testCaseResults };
     } catch (error) {
         console.error("Error retrieving test cases:", error);
         return { error: 'Error retrieving test cases.' };
     }
+};
+
+// Utility function to convert a stream to a string (async/await)
+const streamToString = (stream) => {
+    return new Promise((resolve, reject) => {
+        let data = '';
+        stream.on('data', chunk => data += chunk.toString());
+        stream.on('end', () => resolve(data));
+        stream.on('error', reject);
+    });
 };

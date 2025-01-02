@@ -4,6 +4,7 @@ import mongoose from 'mongoose';
 import { GridFSBucket } from 'mongodb';
 import dotenv from 'dotenv';
 import testcase from './models/testcase.model.js';
+import pLimit from 'p-limit';
 
 dotenv.config();
 
@@ -27,34 +28,37 @@ const initializeMongoDB = async () => {
   }
 };
 
-// Function to upload a file to GridFS
-const uploadFileToGridFS = (filePath) => {
+// Function to upload a file to GridFS with a timeout and chunk size optimization
+const uploadFileToGridFS = async (filePath) => {
+  if (!gfsBucket) {
+    throw new Error('GridFS is not initialized yet.');
+  }
+
+  console.log(`Preparing to upload file: ${filePath}`);
+  if (!fs.existsSync(filePath)) {
+    console.error(`File does not exist: ${filePath}`);
+    throw new Error(`File not found: ${filePath}`);
+  }
+
+  const uploadStream = gfsBucket.openUploadStream(path.basename(filePath), { chunkSizeBytes: 1024 * 1024 }); // 1MB chunk size
+  const fileStream = fs.createReadStream(filePath);
+
   return new Promise((resolve, reject) => {
-    if (!gfsBucket) {
-      return reject(new Error('GridFS is not initialized yet.'));
-    }
-
-    // Log the file path and check if file exists
-    console.log(`Preparing to upload file: ${filePath}`);
-    if (!fs.existsSync(filePath)) {
-      console.error(`File does not exist: ${filePath}`);
-      return reject(new Error(`File not found: ${filePath}`));
-    }
-
-    const uploadStream = gfsBucket.openUploadStream(path.basename(filePath));
-    const fileStream = fs.createReadStream(filePath);
-
-    // Log for file streaming
-    console.log(`Piping file stream for ${filePath}`);
+    const timer = setTimeout(() => {
+      console.error('File upload timed out');
+      reject(new Error('Upload timed out'));
+    }, 5000);  // 5 seconds timeout for upload
 
     fileStream.pipe(uploadStream);
 
     uploadStream.on('finish', () => {
+      clearTimeout(timer);
       console.log(`File uploaded successfully: ${filePath} (ID: ${uploadStream.id})`);
       resolve(uploadStream.id);
     });
 
     uploadStream.on('error', (err) => {
+      clearTimeout(timer);
       console.error(`Error uploading file: ${filePath}`, err);
       reject(err);
     });
@@ -80,50 +84,42 @@ const saveTestCasesFromDirectory = async (problemName, directoryPath) => {
   try {
     const files = fs.readdirSync(directoryPath);
     const testCaseData = [];
+    const limit = pLimit(5);  // Limit concurrency to 5 uploads at once
 
-    for (let i = 0; i < files.length; i++) {
-      const fileName = files[i];
+    // Map files to upload concurrently with the concurrency limit
+    const uploadPromises = files.map((fileName, index) => {
       const filePath = path.join(directoryPath, fileName);
+      
+      return limit(async () => {
+        console.log(`Processing file: ${fileName} at path ${filePath}`);
 
-      // Log the file name and path being processed
-      console.log(`Processing file: ${fileName} at path ${filePath}`);
+        if (fileName.startsWith('input') && fileName.endsWith('.txt')) {
+          const outputFileName = `output${index + 1}.txt`;
+          const outputFilePath = path.join(directoryPath, outputFileName);
 
-      // Check if file is an input file (ends with .txt and starts with "input")
-      if (fileName.startsWith('input') && fileName.endsWith('.txt')) {
-        const outputFileName = `output${i + 1}.txt`;
-        const outputFilePath = path.join(directoryPath, outputFileName);
+          console.log(`Checking for output file: ${outputFilePath}`);
+          if (!fs.existsSync(outputFilePath)) {
+            console.error(`Output file not found: ${outputFilePath}`);
+            return;
+          }
 
-        // Log the output file check
-        console.log(`Checking for output file: ${outputFilePath}`);
+          const inputFileId = await uploadFileToGridFS(filePath);
+          await checkIfFileExistsInGridFS(inputFileId);
 
-        // Ensure the output file exists before proceeding
-        if (!fs.existsSync(outputFilePath)) {
-          console.error(`Output file not found: ${outputFilePath}`);
-          continue;
+          const outputFileId = await uploadFileToGridFS(outputFilePath);
+          await checkIfFileExistsInGridFS(outputFileId);
+
+          console.log(`Input file ID: ${inputFileId}, Output file ID: ${outputFileId}`);
+          testCaseData.push({ inputFileId, outputFileId });
         }
+      });
+    });
 
-        // Ensure directories for uploads exist before uploading
-        const inputDir = path.dirname(filePath);
-        fs.mkdirSync(inputDir, { recursive: true });
+    // Wait for all file uploads to finish
+    await Promise.all(uploadPromises);
 
-        // Upload both input and output files to GridFS
-        const inputFileId = await uploadFileToGridFS(filePath);
-        await checkIfFileExistsInGridFS(inputFileId);  // Verify the file exists in GridFS
-
-        const outputFileId = await uploadFileToGridFS(outputFilePath);
-        await checkIfFileExistsInGridFS(outputFileId);  // Verify the file exists in GridFS
-
-        // Log the IDs being stored
-        console.log(`Input file ID: ${inputFileId}, Output file ID: ${outputFileId}`);
-
-        testCaseData.push({ inputFileId, outputFileId });
-      }
-    }
-
-    // Log the test case data before saving
     console.log('Test case data:', testCaseData);
 
-    // Save test case data to MongoDB
     const testCases = new testcase({
       name: problemName,
       tests: testCaseData,
@@ -142,8 +138,7 @@ const saveTestCasesFromDirectory = async (problemName, directoryPath) => {
     await initializeMongoDB();  // Ensure MongoDB and GridFS are initialized
 
     const problemName = 'Two Sum';
-    // Ensure compatibility with both Windows and Unix file systems
-    const directoryPath = path.resolve('Two Sum');  // Simplified handling of the path
+    const directoryPath = path.resolve('Two Sum');
 
     // Create directory structure if necessary
     fs.mkdirSync(directoryPath, { recursive: true });
