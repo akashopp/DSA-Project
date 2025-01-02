@@ -1,0 +1,25 @@
+/* src/index.css or src/App.css */
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Optionally, you can add custom styles here */
+
+/* Assuming you use Tailwind CSS, or you can add your custom CSS */
+.transition-all {
+    transition: background-color 0.3s ease;
+  }
+  
+  .bg-yellow-400 {
+    background-color: #fcd34d; /* yellow */
+  }
+  
+  .bg-green-400 {
+    background-color: #4ade80; /* green */
+  }
+  
+  .bg-red-400 {
+    background-color: #f87171; /* red */
+  }
+  
