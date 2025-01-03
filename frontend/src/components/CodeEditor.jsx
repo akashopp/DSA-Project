@@ -115,7 +115,7 @@ public class Solution {
     setOutput("");
     setError("");
     try {
-      const response = await fetch("http://localhost:5000/run", {
+      const response = await fetch("http://localhost:5000/runcode/run", {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
@@ -137,7 +137,7 @@ public class Solution {
 
       if (language === 'cpp' || language === 'java') {
         try {
-          const deleteResponse = await fetch("http://localhost:5000/delete-executable", {
+          const deleteResponse = await fetch("http://localhost:5000/runcode/delete-executable", {
             method: "DELETE",
             headers: {
               "Content-Type": "application/json"
@@ -161,82 +161,104 @@ public class Solution {
       setError("Please enter a problem name first!");
       return;
     }
-
+  
     if (testCases.length === 0) {
       setError("No test cases found for this problem.");
       return;
     }
-
+  
     setLoading(true);
     setTestResults([]);
     setOutput("");
     setError("");
-
-    const results = testCases.map(testCase => ({
-      testCase: testCase.input,
-      expectedOutput: testCase.output,
-      actualOutput: null,
-      status: "Pending"
+  
+    const results = testCases.map(() => ({
+      output: null,
+      status: "Pending",
     }));
-
+  
     setTestResults(results);
-
-    for (let i = 0; i < testCases.length; i++) {
-      const { input: testCaseInput, output: expectedOutput } = testCases[i];
-
-      try {
-        const response = await fetch("http://localhost:5000/submit", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({
-            language,
-            code,
-            input: testCaseInput
-          })
-        });
-
-        const result = await response.json();
-        const isPass = result.output.trim() === expectedOutput.trim();
-
-        setTestResults(prevResults => {
-          const updatedResults = [...prevResults];
-          updatedResults[i] = {
-            testCase: testCaseInput,
-            expectedOutput,
-            actualOutput: result.output,
-            status: isPass ? "Passed" : "Failed"
-          };
-          return updatedResults;
-        });
-      } catch (err) {
-        setTestResults(prevResults => {
-          const updatedResults = [...prevResults];
-          updatedResults[i] = {
-            testCase: testCaseInput,
-            expectedOutput: "",
-            actualOutput: "Error running test case.",
-            status: "Failed"
-          };
-          return updatedResults;
-        });
-      }
-    }
-
-    setLoading(false);
-
+  
     try {
-      const deleteResponse = await fetch("http://localhost:5000/delete-executable", {
-        method: "DELETE",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ language })
-      });
-      const deleteResult = await deleteResponse.json();
+      for (let i = 0; i < testCases.length; i++) {
+        const { input: testCaseInput, output: expectedOutput } = testCases[i];
+  
+        try {
+          const response = await fetch("http://localhost:5000/runcode/submit", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              language,
+              code,
+              problemName,
+              testNumber: i + 1,
+            }),
+          });
+  
+          if (!response.ok) {
+            let errorDetails = "No additional information";
+            try {
+              const responseBody = await response.json();
+              errorDetails = responseBody.output || "No output provided";
+            } catch (e) {
+              console.log("Failed to parse error response:", e);
+            }
+            throw new Error(
+              `Server responded with ${response.status}: ${response.statusText}, reason: ${errorDetails}`
+            );
+          }
+  
+          const result = await response.json();
+          const isPass = result.status == "Passed";
+  
+          results[i] = {
+            output: result.output,
+            status: isPass ? "Passed" : "Failed",
+          };
+        } catch (err) {
+            console.log("Error running test case:", err.message);
+          
+            // Extract error details from `stderr` or fallback to `message`.
+            const errorMessage = err.stderr || err.message || "Unknown error occurred.";
+
+            // Determine if the error is a compile-time error or runtime error.
+            const isCompileError = 
+                !errorMessage.toLowerCase().includes("timeout");
+          
+            // Update results with the appropriate status and output.
+            results[i] = {
+                output: isCompileError ? `Compilation Error: ${errorMessage}` : `Runtime Error: ${errorMessage}`,
+                status: isCompileError ? "Compile Error" : "Runtime Error",
+            };
+        }
+        setTestResults([...results]); // Update test results after each test case
+      }
     } catch (err) {
-      console.log('Error cleaning up compiled file:', err.message);
+      console.error("Unexpected error during test execution:", err.message);
+      setError("An unexpected error occurred. Please try again.");
+    } finally {
+      setLoading(false);
+  
+      // Cleanup compiled executables
+      try {
+        const deleteResponse = await fetch(
+          "http://localhost:5000/runcode/delete-executable",
+          {
+            method: "DELETE",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ language }),
+          }
+        );
+        if (!deleteResponse.ok) {
+          console.error("Error cleaning up compiled file:", deleteResponse.statusText);
+        }
+      } catch (err) {
+        console.log("Error cleaning up compiled file:", err.message);
+      }
     }
   };
 
@@ -383,40 +405,43 @@ public class Solution {
 
           {/* Test Case Table */}
           {testCases.length > 0 && (
-              <div className="mt-6">
-                <h3 className="text-xl font-semibold mb-4">Test Cases</h3>
-                <table className="min-w-full table-auto text-left border-collapse">
-                  <thead>
-                    <tr>
-                      <th className="py-2 px-4">Test Case</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {testCases.map((testCase, index) => {
-                      const testResult = testResults[index];
-                      const status = testResult ? testResult.status : "Pending";
+            <div className="mt-6">
+              <h3 className="text-xl font-semibold mb-4">Test Cases</h3>
+              <table className="min-w-full table-auto text-left border-collapse">
+                <thead>
+                  <tr>
+                    <th className="py-2 px-4">Test Case</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {testCases.map((testCase, index) => {
+                    const testResult = testResults[index];
+                    const status = testResult ? testResult.status : "Pending";
 
-                      let statusColor = "bg-yellow-300";
-                      if (status === "Passed") statusColor = "bg-green-500";
-                      if (status === "Failed") statusColor = "bg-red-500";
+                    // Assign colors based on status
+                    let statusColor = "bg-yellow-300"; // Default for Pending
+                    if (status === "Passed") statusColor = "bg-green-500"; // Green for Passed
+                    else if (status === "Compile Error") statusColor = "bg-blue-500"; // Blue for Compile Error
+                    else if (status === "Runtime Error") statusColor = "bg-orange-500"; // Orange for Runtime Error
+                    else if (status === "Failed") statusColor = "bg-red-500"; // Red for Wrong Answer
 
-                      return (
-                        <tr key={index}>
-                          <td className="py-2 px-4 flex items-center">
-                            <div
-                              className={`w-8 h-8 rounded-full flex items-center justify-center font-semibold text-white mr-2 transition-all duration-500 ${statusColor}`}
-                            >
-                              #{index + 1}
-                            </div>
-                            {/*<span>{testCase.input}</span>*/}
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            )}
+                    return (
+                      <tr key={index}>
+                        <td className="py-2 px-4 flex items-center">
+                          <div
+                            className={`w-8 h-8 rounded-full flex items-center justify-center font-semibold text-white mr-2 transition-all duration-500 ${statusColor}`}
+                          >
+                            #{index + 1}
+                          </div>
+                          {/* <span>{testCase.input}</span> */}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
       </div>
     </div>
