@@ -4,7 +4,7 @@ import path from 'path';
 import { fileURLToPath } from 'url'; // For converting URL to file path
 import { dirname } from 'path'; // For getting directory name from a file path
 // Promisify the exec function to use async/await
-import { exec } from 'child_process';
+import { exec, spawn } from 'child_process';
 import util from 'util';
 
 
@@ -81,7 +81,7 @@ router.post('/run', async (req, res) => {
 
   try {
     // Compile the code (if necessary)
-    const { stdout, stderr } = await execPromisified(compileCmd, { cwd: workingDir, timeout: 7000 });
+    const { stdout, stderr } = await execPromisified(compileCmd, { cwd: workingDir, timeout: 3000 });
 
     // If there are compilation errors, return them
     if (stderr) {
@@ -89,7 +89,7 @@ router.post('/run', async (req, res) => {
     }
 
     // Run the code
-    const runProcess = exec(runCmd, { cwd: workingDir, timeout: 7000 });
+    const runProcess = exec(runCmd, { cwd: workingDir, timeout: 3000 });
 
     // If input is provided, write it to the process's stdin
     if (input) {
@@ -215,7 +215,7 @@ router.post('/submit', async (req, res) => {
 
   try {
     if (compileNeeded) {
-      const { stdout, stderr } = await execPromisified(compileCmd, { timeout: 7000 });
+      const { stdout, stderr } = await execPromisified(compileCmd, { timeout: 3000 });
       if (stderr) {
         return res.status(500).send({ output: `Compilation Error: ${stderr}` });
       }
@@ -223,32 +223,55 @@ router.post('/submit', async (req, res) => {
 
     let runCmd;
     if (language === 'cpp') {
-      runCmd = `"${compiledFilePath}" < "${inputFile}"`;
+      runCmd = compiledFilePath;
     } else if (language === 'java') {
-      runCmd = `java -cp "${__dirname}" Solution < "${inputFile}"`;
+      runCmd = `java`;
     } else if (language === 'python') {
-      runCmd = `python "${filePath}" < "${inputFile}"`;
+      runCmd = `python`;
     }
 
-    const { stdout, stderr } = await execPromisified(runCmd, { timeout: 7000 });
+    const processArgs = language === 'java'
+      ? ['-cp', __dirname, 'Solution']
+      : [compiledFilePath];
 
-    if (stderr) {
-      return res.status(500).send({ output: `Runtime Error: ${stderr}` });
-    }
+    const child = spawn(runCmd, processArgs, { stdio: ['pipe', 'pipe', 'pipe'] });
 
-    const expectedOutput = fs.readFileSync(expectedOutputFile, 'utf8');
-    console.log('output : ', stdout);
-    console.log('expected : ', expectedOutput);
-    const isPass = stdout.trim() === expectedOutput.trim();
-    const status = isPass ? 'Passed' : 'Failed';
-    const message = isPass ? 'Test passed successfully' : `Expected: ${expectedOutput.trim()}, but got: ${stdout.trim()}`;
+    const timer = setTimeout(() => {
+      child.kill('SIGKILL'); // Forcefully kill the process
+    }, 3000);
 
-    res.send({ output: stdout.trim(), status, message });
-    console.log('status : ', status);
+    const inputStream = fs.createReadStream(inputFile);
+    let output = '';
+    let errorOutput = '';
+
+    child.stdout.on('data', (data) => {
+      output += data.toString();
+    });
+
+    child.stderr.on('data', (data) => {
+      errorOutput += data.toString();
+    });
+
+    child.on('close', (code) => {
+      clearTimeout(timer);
+
+      if (code !== 0) {
+        return res.status(500).send({ output: `Runtime Error: ${errorOutput.trim() || 'Time Limit Exceeded'}` });
+      }
+
+      const expectedOutput = fs.readFileSync(expectedOutputFile, 'utf8');
+      console.log('output : ', output);
+      console.log('expected : ', expectedOutput);
+      const isPass = output.trim() === expectedOutput.trim();
+      const status = isPass ? 'Passed' : 'Failed';
+      const message = isPass ? 'Test passed successfully' : `Expected: ${expectedOutput.trim()}, but got: ${output.trim()}`;
+
+      res.send({ output: output.trim(), status, message });
+      console.log('status : ', status);
+    });
+
+    inputStream.pipe(child.stdin);
   } catch (err) {
-    if (err.signal === 'SIGTERM') {
-      return res.status(500).send({ output: 'Execution Timeout: Code took too long to run.', status: 'Runtime Error' });
-    }
     return res.status(500).send({ output: `Execution Error: ${err.message}` });
   }
 });
