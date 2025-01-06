@@ -207,7 +207,7 @@ router.post('/submit', async (req, res) => {
       compileCmd = `g++ -o "${compiledFilePath}" "${filePath}"`;
     }
   } else if (language === 'java') {
-    if (!fs.existsSync(compiledFilePath) || fs.statSync(filePath).mtime > fs.statSync(compiledFilePath).mtime) {
+    if (!fs.existsSync(compiledFilePath)) {
       compileNeeded = true;
       compileCmd = `javac "${filePath}"`;
     }
@@ -222,25 +222,23 @@ router.post('/submit', async (req, res) => {
     }
 
     let runCmd;
+    let processArgs = []
     if (language === 'cpp') {
       runCmd = compiledFilePath;
     } else if (language === 'java') {
-      runCmd = `java`;
+      runCmd = 'java';
+      processArgs = ['-cp', __dirname, 'Solution'];
     } else if (language === 'python') {
       runCmd = `python`;
+      processArgs = [filePath];
     }
 
-    const processArgs = language === 'java'
-      ? ['-cp', __dirname, 'Solution']
-      : [compiledFilePath];
-
-    const child = spawn(runCmd, processArgs, { stdio: ['pipe', 'pipe', 'pipe'] });
+    const child = spawn(runCmd, processArgs, { stdio: [fs.openSync(inputFile, 'r'), 'pipe', 'pipe'] });
 
     const timer = setTimeout(() => {
       child.kill('SIGKILL'); // Forcefully kill the process
-    }, 3000);
+    }, 3500);
 
-    const inputStream = fs.createReadStream(inputFile);
     let output = '';
     let errorOutput = '';
 
@@ -270,7 +268,6 @@ router.post('/submit', async (req, res) => {
       console.log('status : ', status);
     });
 
-    inputStream.pipe(child.stdin);
   } catch (err) {
     return res.status(500).send({ output: `Execution Error: ${err.message}` });
   }
