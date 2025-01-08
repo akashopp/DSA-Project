@@ -33,3 +33,7 @@ build/
 # System files
 Thumbs.db
 desktop.ini
+
+solution.cpp
+solution.py
+Solution.java

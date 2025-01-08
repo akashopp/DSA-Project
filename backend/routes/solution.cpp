@@ -1,5 +1,7 @@
 #include <bits/stdc++.h>
 using namespace std;
+using ll = long long;
+#define int long long
 
 ll mo = 1e9 + 7;
 ll modu(ll a) {return ((a % mo) + mo) % mo;}
