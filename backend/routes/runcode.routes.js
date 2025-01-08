@@ -15,15 +15,13 @@ const router = express.Router();
 const __filename = fileURLToPath(import.meta.url); // Convert URL to file path
 const __dirname = dirname(__filename); // Get directory name from file path
 
-// Define the POST route for running code
-router.post('/run', async (req, res) => {
-  const { language, code, input } = req.body;
+router.post('/compile', async (req, res) => {
+  const { language, code } = req.body;
 
-  // Log the incoming request body
-  // console.log('Request body:', req.body);
-  // console.log(__dirname);
+  if (!language || !code) {
+    return res.status(400).send({ output: 'Language and code are required.' });
+  }
 
-  // Temporary file names for code and output
   const filename =
     language === 'cpp'
       ? 'solution.cpp'
@@ -34,96 +32,95 @@ router.post('/run', async (req, res) => {
     language === 'cpp'
       ? 'solution.exe'
       : language === 'java'
-      ? 'Solution'
+      ? 'Solution.class'
       : 'solution.py';
 
-  // Write user code to the respective file
   const filePath = path.join(__dirname, filename);
+  const compiledFilePath = path.join(__dirname, execFileName);
+
   fs.writeFileSync(filePath, code);
 
-  // Log the file write and path
-  // console.log(`File written to ${filePath}`);
-
-  // Ensure the file exists before compiling
-  if (!fs.existsSync(filePath)) {
-    return res.status(500).send({ output: `File ${filePath} not found after writing.` });
-  }
-
-  // Set the working directory to the one where the code file is located
-  const workingDir = __dirname;
-
-  // Commands to compile and run code based on the language
-  let compileCmd, runCmd;
+  let compileCmd;
   if (language === 'cpp') {
-    compileCmd = `g++ -o ${execFileName} ${filePath}`;
-    runCmd = path.join(workingDir, execFileName); // Correct path for Windows
+    compileCmd = `g++ -o "${compiledFilePath}" "${filePath}"`;
   } else if (language === 'java') {
-    compileCmd = `javac ${filePath}`;
-    runCmd = `java -cp ${workingDir} Solution`; // Ensure to run from the correct directory
+    compileCmd = `javac "${filePath}"`;
   } else if (language === 'python') {
-    compileCmd = 'python --version'; // Python doesn't need compilation, just verify it's available
-    runCmd = `python ${filePath}`;
-  } else {
-    return res.status(400).send({ output: 'Unsupported language' });
-  }
-
-  // Log the command setup for debugging
-  // console.log(`Language: ${language}`);
-  // console.log(`Filename: ${filename}`);
-  // console.log(`Exec Filename: ${execFileName}`);
-  // console.log(`Compile Command: ${compileCmd}`);
-  // console.log(`Run Command: ${runCmd}`);
-
-  // Make sure both commands are valid
-  if (!compileCmd || !runCmd) {
-    return res.status(500).send({ output: 'Invalid command setup' });
+    compileCmd = 'python --version'; // Python doesn't require compilation
   }
 
   try {
-    // Compile the code (if necessary)
-    const { stdout, stderr } = await execPromisified(compileCmd, { cwd: workingDir, timeout: 3000 });
-
-    // If there are compilation errors, return them
-    if (stderr) {
-      return res.status(500).send({ output: `Compilation Error: ${stderr}` });
-    }
-
-    // Run the code
-    const runProcess = exec(runCmd, { cwd: workingDir, timeout: 3000 });
-
-    // If input is provided, write it to the process's stdin
-    if (input) {
-      runProcess.stdin.write(input);
-      runProcess.stdin.end(); // End the stdin stream
-    }
-
-    let output = '';
-    let errors = '';
-
-    runProcess.stdout.on('data', (data) => {
-      output += data;
-    });
-
-    runProcess.stderr.on('data', (data) => {
-      errors += data;
-    });
-
-    runProcess.on('close', (code) => {
-      if (code !== 0) {
-        return res.status(500).send({
-          output: `${errors || 'Unknown execution error / Timeout (Execution > 7s)\n Check your input!'}`,
-        });
+    if (language !== 'python') {
+      const { stderr } = await execPromisified(compileCmd, { timeout: 3000 });
+      if (stderr) {
+        return res.status(500).send({ output: `Compilation Error: ${stderr}` });
       }
-
-      res.send({ output: output || 'No output generated' });
-    });
-  } catch (err) {
-    if (err.signal === 'SIGTERM') {
-      // Timeout error
-      return res.status(500).send({ output: 'Execution Timeout: Code took too long to run.' });
     }
-    return res.status(500).send({ output: `Execution Error: ${err.message}` });
+    res.status(200).send({ message: 'Compilation successful.' });
+  } catch (err) {
+    return res.status(500).send({ output: `Compilation Error: ${err.message}` });
   }
+});
+
+// Define the POST route for running code
+router.post('/run', (req, res) => {
+  const { language, input } = req.body;
+
+  const execFileName =
+    language === 'cpp'
+      ? 'solution.exe'
+      : language === 'java'
+      ? 'Solution.class'
+      : 'solution.py';
+
+  const compiledFilePath = path.join(__dirname, execFileName);
+
+  if (!fs.existsSync(compiledFilePath)) {
+    return res.status(400).send({ output: 'Executable file not found. Please compile the code first.' });
+  }
+
+  let runCmd;
+  let processArgs = [];
+  if (language === 'cpp') {
+    runCmd = compiledFilePath;
+  } else if (language === 'java') {
+    runCmd = 'java';
+    processArgs = ['-cp', __dirname, 'Solution'];
+  } else if (language === 'python') {
+    runCmd = 'pypy3';
+    processArgs = [compiledFilePath];
+  }
+
+  const runProcess = spawn(runCmd, processArgs, { stdio: ['pipe', 'pipe', 'pipe'] });
+  
+  const timer = setTimeout(() => {
+    runProcess.kill('SIGKILL'); // Forcefully kill the process
+  }, 1500);
+
+  if (input) {
+    runProcess.stdin.write(input);
+    runProcess.stdin.end();
+  }
+
+  let output = '';
+  let errors = '';
+
+  runProcess.stdout.on('data', (data) => {
+    output += data;
+  });
+
+  runProcess.stderr.on('data', (data) => {
+    errors += data;
+  });
+
+  runProcess.on('close', (code) => {
+    if (code !== 0) {
+      return res.status(500).send({
+        output: `${errors || 'Unknown runtime error / Timeout (Execution > 7s)'}`,
+      });
+    }
+    res.send({ output: output || 'No output generated' });
+  });
 });
 
 
@@ -158,119 +155,66 @@ router.delete('/delete-executable', (req, res) => {
 
 // Define the POST route for submitting code
 router.post('/submit', async (req, res) => {
-  const { language, code, problemName, testNumber } = req.body;
+  const { language, problemName, testNumber } = req.body;
   console.log("running :", problemName, " test :", testNumber);
-
   if (!problemName || !testNumber) {
     return res.status(400).send({ output: 'Problem name and test number are required.' });
   }
 
   const testCaseDir = path.join(__dirname, '..', 'testcases', problemName);
-
-  if (!fs.existsSync(testCaseDir)) {
-    return res.status(404).send({ output: `Test case directory for ${problemName} not found.` });
-  }
-
   const inputFile = path.join(testCaseDir, `input${testNumber}.txt`);
   const expectedOutputFile = path.join(testCaseDir, `output${testNumber}.txt`);
 
-  if (!fs.existsSync(inputFile)) {
-    return res.status(404).send({ output: `Input file for test number ${testNumber} not found.` });
-  }
+  const execFileName =
+    language === 'cpp'
+      ? 'solution.exe'
+      : language === 'java'
+      ? 'Solution.class'
+      : 'solution.py';
 
-  if (!fs.existsSync(expectedOutputFile)) {
-    return res.status(404).send({ output: `Expected output file for test number ${testNumber} not found.` });
-  }
-
-  const filename = language === 'cpp'
-    ? 'solution.cpp'
-    : language === 'java'
-    ? 'Solution.java'
-    : 'solution.py';
-
-  const execFileName = language === 'cpp'
-    ? 'solution.exe'
-    : language === 'java'
-    ? 'Solution.class'
-    : 'solution.py';
-
-  const filePath = path.join(__dirname, filename);
-  fs.writeFileSync(filePath, code);
-
-  let compileCmd;
   const compiledFilePath = path.join(__dirname, execFileName);
-  let compileNeeded = false;
 
-  if (language === 'cpp') {
-    if (!fs.existsSync(compiledFilePath)) {
-      compileNeeded = true;
-      compileCmd = `g++ -o "${compiledFilePath}" "${filePath}"`;
-    }
-  } else if (language === 'java') {
-    if (!fs.existsSync(compiledFilePath)) {
-      compileNeeded = true;
-      compileCmd = `javac "${filePath}"`;
-    }
+  if (!fs.existsSync(compiledFilePath)) {
+    return res.status(400).send({ output: 'Executable file not found. Please compile the code first.' });
   }
 
-  try {
-    if (compileNeeded) {
-      const { stdout, stderr } = await execPromisified(compileCmd, { timeout: 3000 });
-      if (stderr) {
-        return res.status(500).send({ output: `Compilation Error: ${stderr}` });
-      }
+  const child = spawn(
+    language === 'cpp' ? compiledFilePath : language === 'java' ? 'java' : 'pypy3',
+    language === 'java' ? ['-cp', __dirname, 'Solution'] : [compiledFilePath],
+    { stdio: [fs.openSync(inputFile, 'r'), 'pipe', 'pipe'] }
+  );
+
+  const timer = setTimeout(() => {
+    child.kill('SIGKILL'); // Forcefully kill the process
+  }, 1500);
+
+  let output = '';
+  let errors = '';
+
+  child.stdout.on('data', (data) => {
+    output += data;
+  });
+
+  child.stderr.on('data', (data) => {
+    errors += data;
+  });
+
+  child.on('close', (code) => {
+    if (code !== 0) {
+      return res.status(500).send({ output: `Runtime Error: ${errors || 'Time Limit Exceeded'}` });
     }
 
-    let runCmd;
-    let processArgs = []
-    if (language === 'cpp') {
-      runCmd = compiledFilePath;
-    } else if (language === 'java') {
-      runCmd = 'java';
-      processArgs = ['-cp', __dirname, 'Solution'];
-    } else if (language === 'python') {
-      runCmd = `python`;
-      processArgs = [filePath];
-    }
-
-    const child = spawn(runCmd, processArgs, { stdio: [fs.openSync(inputFile, 'r'), 'pipe', 'pipe'] });
-
-    const timer = setTimeout(() => {
-      child.kill('SIGKILL'); // Forcefully kill the process
-    }, 3500);
-
-    let output = '';
-    let errorOutput = '';
-
-    child.stdout.on('data', (data) => {
-      output += data.toString();
-    });
-
-    child.stderr.on('data', (data) => {
-      errorOutput += data.toString();
-    });
-
-    child.on('close', (code) => {
-      clearTimeout(timer);
-
-      if (code !== 0) {
-        return res.status(500).send({ output: `Runtime Error: ${errorOutput.trim() || 'Time Limit Exceeded'}` });
-      }
-
-      const expectedOutput = fs.readFileSync(expectedOutputFile, 'utf8');
-      console.log('output : ', output);
-      console.log('expected : ', expectedOutput);
-      const isPass = output.trim() === expectedOutput.trim();
-      const status = isPass ? 'Passed' : 'Failed';
-      const message = isPass ? 'Test passed successfully' : `Expected: ${expectedOutput.trim()}, but got: ${output.trim()}`;
-
-      res.send({ output: output.trim(), status, message });
-      console.log('status : ', status);
-    });
-
-  } catch (err) {
-    return res.status(500).send({ output: `Execution Error: ${err.message}` });
-  }
+    const expectedOutput = fs.readFileSync(expectedOutputFile, 'utf8');
+    const isPass = output.trim() === expectedOutput.trim();
+    const status = isPass ? 'Passed' : 'Failed';
+    const message = isPass
+      ? 'Test passed successfully'
+      : `Expected: ${expectedOutput.trim()}, but got: ${output.trim()}`;
+    console.log('output : ', output);
+    console.log('expected : ', expectedOutput);
+    console.log('status : ', status);
+    res.send({ output: output.trim(), status, message });
+  });
 });
 
 export default router;

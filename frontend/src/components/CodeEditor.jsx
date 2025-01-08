@@ -29,6 +29,7 @@ const CodeEditor = () => {
   const [problemName, setProblemName] = useState(""); // Problem name input
   const [testCases, setTestCases] = useState([]);
   const [testResults, setTestResults] = useState([]);
+  const [compiling, setCompiling] = useState(false);
 
   // Example templates for code
   const templates = {
@@ -112,62 +113,7 @@ public class Solution {
   // Handle running code with the given input (for the "Run" button)
   const handleRunCode = async () => {
     setLoading(true);
-    setOutput("");
-    setError("");
-    try {
-      const response = await fetch("http://localhost:5000/runcode/run", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          language,
-          code,
-          input
-        })
-      });
-
-      const result = await response.json();
-
-      if (response.ok) {
-        setOutput(result.output);
-      } else {
-        setError(result.output || "An error occurred");
-      }
-
-      if (language === 'cpp' || language === 'java') {
-        try {
-          const deleteResponse = await fetch("http://localhost:5000/runcode/delete-executable", {
-            method: "DELETE",
-            headers: {
-              "Content-Type": "application/json"
-            },
-            body: JSON.stringify({ language })
-          });
-          const deleteResult = await deleteResponse.json();
-        } catch (err) {
-          console.log('Error cleaning up compiled file:', err.message);
-        }
-      }
-    } catch (err) {
-      setError("Failed to communicate with the server.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleSubmit = async () => {
-    if (!problemName) {
-      setError("Please enter a problem name first!");
-      return;
-    }
-  
-    if (testCases.length === 0) {
-      setError("No test cases found for this problem.");
-      return;
-    }
-  
-    setLoading(true);
+    setCompiling(true); // Show compiling animation
     setTestResults([]);
     setOutput("");
     setError("");
@@ -180,67 +126,55 @@ public class Solution {
     setTestResults(results);
   
     try {
-      for (let i = 0; i < testCases.length; i++) {
-        const { input: testCaseInput, output: expectedOutput } = testCases[i];
+      // Compilation step
+      const compileResponse = await fetch("http://localhost:5000/runcode/compile", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ language, code, problemName }),
+      });
   
-        try {
-          const response = await fetch("http://localhost:5000/runcode/submit", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              language,
-              code,
-              problemName,
-              testNumber: i + 1,
-            }),
-          });
-  
-          if (!response.ok) {
-            let errorDetails = "No additional information";
-            try {
-              const responseBody = await response.json();
-              errorDetails = responseBody.output || "No output provided";
-            } catch (e) {
-              console.log("Failed to parse error response:", e);
-            }
-            throw new Error(
-              `Server responded with ${response.status}: ${response.statusText}, reason: ${errorDetails}`
-            );
-          }
-  
-          const result = await response.json();
-          const isPass = result.status == "Passed";
-  
-          results[i] = {
-            output: result.output,
-            status: isPass ? "Passed" : "Failed",
-          };
-        } catch (err) {
-            console.log("Error running test case:", err.message);
-          
-            // Extract error details from `stderr` or fallback to `message`.
-            const errorMessage = err.stderr || err.message || "Unknown error occurred.";
-
-            // Determine if the error is a compile-time error or runtime error.
-            const isCompileError = 
-                !errorMessage.toLowerCase().includes("timeout");
-          
-            // Update results with the appropriate status and output.
-            results[i] = {
-                output: isCompileError ? `Compilation Error: ${errorMessage}` : `Runtime Error: ${errorMessage}`,
-                status: isCompileError ? "Compile Error" : "Runtime Error",
-            };
-        }
-        setTestResults([...results]); // Update test results after each test case
+      if (!compileResponse.ok) {
+        const errorBody = await compileResponse.json();
+        throw new Error(errorBody.output || "Compilation failed with no details.");
       }
-    } catch (err) {
+  
+      setCompiling(false); // Stop showing compiling animation
+  
+      // Running test cases
+      try {
+        const response = await fetch("http://localhost:5000/runcode/run", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            language,
+            input
+          }),
+        });
+
+        if (!response.ok) {
+          const responseBody = await response.json();
+          throw new Error(responseBody.output || "No output provided.");
+        }
+
+        const result = await response.json();
+        setOutput(result.output);
+      } catch (err) {
+        console.log("Error running code", err.message);
+        const errorMessage = err.stderr || err.message || "Unknown error occurred.";
+        const isCompileError = errorMessage.toLowerCase().includes("compilation error");
+        setError(err.message);
+        };
+      }
+    catch (err) {
       console.error("Unexpected error during test execution:", err.message);
-      setError("An unexpected error occurred. Please try again.");
+      setError(`An unexpected error occurred. Please try again.\n${err.message}`);
     } finally {
       setLoading(false);
-  
+      setCompiling(false);
       // Cleanup compiled executables
       try {
         const deleteResponse = await fetch(
@@ -261,6 +195,119 @@ public class Solution {
       }
     }
   };
+
+  const handleSubmit = async () => {
+    if (!problemName) {
+      setError("Please enter a problem name first!");
+      return;
+    }
+  
+    if (testCases.length === 0) {
+      setError("No test cases found for this problem.");
+      return;
+    }
+  
+    setLoading(true);
+    setCompiling(true); // Show compiling animation
+    setTestResults([]);
+    setOutput("");
+    setError("");
+  
+    const results = testCases.map(() => ({
+      output: null,
+      status: "Pending",
+    }));
+  
+    setTestResults(results);
+  
+    try {
+      // Compilation step
+      const compileResponse = await fetch("http://localhost:5000/runcode/compile", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ language, code, problemName }),
+      });
+  
+      if (!compileResponse.ok) {
+        const errorBody = await compileResponse.json();
+        throw new Error(errorBody.output || "Compilation failed with no details.");
+      }
+  
+      setCompiling(false); // Stop showing compiling animation
+  
+      // Running test cases
+      for (let i = 0; i < testCases.length; i++) {
+        const { input: testCaseInput, output: expectedOutput } = testCases[i];
+  
+        try {
+          const response = await fetch("http://localhost:5000/runcode/submit", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              language,
+              code,
+              problemName,
+              testNumber: i + 1,
+            }),
+          });
+  
+          if (!response.ok) {
+            const responseBody = await response.json();
+            throw new Error(responseBody.output || "No output provided.");
+          }
+  
+          const result = await response.json();
+          const isPass = result.status === "Passed";
+  
+          results[i] = {
+            output: result.output,
+            status: isPass ? "Passed" : "Failed",
+          };
+        } catch (err) {
+          console.log("Error running test case:", err.message);
+  
+          const errorMessage = err.stderr || err.message || "Unknown error occurred.";
+          const isCompileError = errorMessage.toLowerCase().includes("compilation error");
+  
+          results[i] = {
+            output: isCompileError
+              ? `Compilation Error: ${errorMessage}`
+              : `Runtime Error: ${errorMessage}`,
+            status: isCompileError ? "Compile Error" : "Runtime Error",
+          };
+        }
+        setTestResults([...results]); // Update test results after each test case
+      }
+    } catch (err) {
+      console.error("Unexpected error during test execution:", err.message);
+      setError(`An unexpected error occurred. Please try again.\n${err.message}`);
+    } finally {
+      setLoading(false);
+      setCompiling(false);
+      // Cleanup compiled executables
+      try {
+        const deleteResponse = await fetch(
+          "http://localhost:5000/runcode/delete-executable",
+          {
+            method: "DELETE",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ language }),
+          }
+        );
+        if (!deleteResponse.ok) {
+          console.error("Error cleaning up compiled file:", deleteResponse.statusText);
+        }
+      } catch (err) {
+        console.log("Error cleaning up compiled file:", err.message);
+      }
+    }
+  };  
 
   const toggleTheme = () => {
     setIsDarkMode(!isDarkMode);
@@ -372,7 +419,13 @@ public class Solution {
               className="flex-1 py-3 px-4 bg-green-500 hover:bg-green-600 text-white rounded-md font-semibold flex items-center justify-center"
               disabled={loading}
             >
-              Submit
+              {compiling ? (
+                <>
+                  <div className="w-6 h-6 border-4 border-white border-t-transparent border-solid rounded-full animate-spin mr-2"></div> Compiling...
+                </>
+              ) : (
+                "Submit"
+              )}
             </button>
           </div>
 
