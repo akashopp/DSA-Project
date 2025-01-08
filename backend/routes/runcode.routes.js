@@ -51,7 +51,7 @@ router.post('/compile', async (req, res) => {
 
   try {
     if (language !== 'python') {
-      const { stderr } = await execPromisified(compileCmd, { timeout: 3000 });
+      const { stderr } = await execPromisified(compileCmd, { timeout: 5000 });
       if (stderr) {
         return res.status(500).send({ output: `Compilation Error: ${stderr}` });
       }
@@ -148,7 +148,7 @@ router.delete('/delete-executable', (req, res) => {
       res.status(200).send({ message: 'Compiled executable deleted successfully.' });
     });
   } else {
-    return res.status(404).send({ output: 'Compiled file not found.' });
+    return res.status(200).send({ output: 'Compiled file not found.' });
   }
 });
 
@@ -184,9 +184,11 @@ router.post('/submit', async (req, res) => {
     { stdio: [fs.openSync(inputFile, 'r'), 'pipe', 'pipe'] }
   );
 
+  const startTime = process.hrtime();
+
   const timer = setTimeout(() => {
     child.kill('SIGKILL'); // Forcefully kill the process
-  }, 1500);
+  }, 2000);
 
   let output = '';
   let errors = '';
@@ -200,8 +202,12 @@ router.post('/submit', async (req, res) => {
   });
 
   child.on('close', (code) => {
+    clearTimeout(timer);
+
+    const runtime = code === 0 ? `${process.hrtime(startTime)[1] / 1e6}ms` : 'na';
+
     if (code !== 0) {
-      return res.status(500).send({ output: `Runtime Error: ${errors || 'Time Limit Exceeded'}` });
+      return res.status(500).send({ output: `Runtime Error: ${errors || 'Time Limit Exceeded'}`, runtime });
     }
 
     const expectedOutput = fs.readFileSync(expectedOutputFile, 'utf8');
@@ -213,7 +219,8 @@ router.post('/submit', async (req, res) => {
     console.log('output : ', output);
     console.log('expected : ', expectedOutput);
     console.log('status : ', status);
-    res.send({ output: output.trim(), status, message });
+    console.log('runtime : ', runtime);
+    res.send({ output: output.trim(), status, message, runtime });
   });
 });
 

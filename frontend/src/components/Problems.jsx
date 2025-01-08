@@ -85,6 +85,40 @@ function Problems() {
     }));
   };
 
+  // Handle checkbox change, marking a problem as solved
+  const toggleProblemStatus = async (index, topic) => {
+    const problemId = groupedProblems[topic][index]._id; // Get the problem's ID
+    const isProblemSolved = userProblems.includes(problemId); // Check if the problem is in the user's list
+
+    try {
+      // Send a PUT request to update the user's problem list
+      const url = isProblemSolved
+        ? 'http://localhost:5000/user/deleteproblem' // If problem is solved, we need to remove it
+        : 'http://localhost:5000/user/addproblem'; // If problem is not solved, we add it
+
+      const response = await fetch(url, {
+        method: 'PUT', // Use PUT for both adding and deleting problems
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId, // The current user's ID
+          problemId, // The ID of the problem being toggled
+        }),
+      });
+
+      if (response.ok) {
+        // After the problem status is updated, reload the problems and user problems
+        fetchProblems(); // Fetch updated problems
+        fetchUserProblems(); // Fetch updated user problems list
+      } else {
+        console.error('Failed to update user problem list');
+      }
+    } catch (error) {
+      console.error('Error updating user problem list:', error);
+    }
+  };
+
   return (
     <div className="flex-1 bg-slate text-white font-extrabold">
       {/* Render each topic section */}

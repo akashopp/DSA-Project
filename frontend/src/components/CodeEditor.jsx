@@ -266,6 +266,7 @@ public class Solution {
           results[i] = {
             output: result.output,
             status: isPass ? "Passed" : "Failed",
+            runtime: result.runtime
           };
         } catch (err) {
           console.log("Error running test case:", err.message);
@@ -278,6 +279,7 @@ public class Solution {
               ? `Compilation Error: ${errorMessage}`
               : `Runtime Error: ${errorMessage}`,
             status: isCompileError ? "Compile Error" : "Runtime Error",
+            runtime: 'NA'
           };
         }
         setTestResults([...results]); // Update test results after each test case
@@ -470,7 +472,7 @@ public class Solution {
                   {testCases.map((testCase, index) => {
                     const testResult = testResults[index];
                     const status = testResult ? testResult.status : "Pending";
-
+                    const runtime = testResult ? testResult.runtime : "NA";
                     // Assign colors based on status
                     let statusColor = "bg-yellow-300"; // Default for Pending
                     if (status === "Passed") statusColor = "bg-green-500"; // Green for Passed
@@ -487,6 +489,7 @@ public class Solution {
                             #{index + 1}
                           </div>
                           {/* <span>{testCase.input}</span> */}
+                          <span>{`Runtime : ${runtime == undefined ? "waiting" : runtime}`}</span>
                         </td>
                       </tr>
                     );

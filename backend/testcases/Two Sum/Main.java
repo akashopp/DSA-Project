@@ -16,7 +16,7 @@ public class Main {
 
         Random r = new Random();
         int mx = 200000;
-        int n = r.nextInt(5, mx), sum = r.nextInt(0, 5 * mx);
+        int n = mx, sum = r.nextInt(0, 5 * mx);
         int[] arr = new int[n];
         // Create the input file and write the randomly generated matrix to it
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(inputFilePath))) {
