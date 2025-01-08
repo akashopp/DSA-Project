@@ -6,6 +6,8 @@ import Home from "./pages/Home";
 import Practice from "./pages/Practice";
 import Roadmap from "./pages/Roadmap";
 import Submit from "./pages/Submit";
+import Register from "./pages/Register";
+
 function App() {
  
 
@@ -20,6 +22,7 @@ function App() {
         <Route path="/practice" element={<Practice />} />
         <Route path="/roadmap" element={<Roadmap />} />
         <Route path="/submit" element={<Submit />} />
+        <Route path="/register" element={<Register />} />
       </Routes>
       </Router>
     </>

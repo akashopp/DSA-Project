@@ -86,7 +86,7 @@ function Navbar() {
           </svg>
         </button>
         <Link 
-          to="/signin" 
+          to="/register" 
           className="bg-blue-600 hover:bg-blue-500 px-4 py-1.5 rounded-md transition-colors"
         >
           Sign in
