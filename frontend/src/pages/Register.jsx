@@ -20,35 +20,35 @@ const Register = () => {
     const addUser = { name, userId, email, phoneNumber, password };
     console.log(addUser)
 
-    // const response = await fetch("http://localhost:8000/user/register", {
-    //   method: "POST",
-    //   body: JSON.stringify(addUser),
-    //   headers: {
-    //     "Content-Type": "application/json"
-    //   }
-    // })
+    const response = await fetch("http://localhost:5000/user/register", {
+      method: "POST",
+      body: JSON.stringify(addUser),
+      headers: {
+        "Content-Type": "application/json"
+      }
+    })
     
-  //   const result = await response.json();
+    const result = await response.json();
     
-  //   if (!response.ok) {
-  //     if(result.message == "User aldready exist") {
-  //       alert("User Aldready exists");
-  //     }
-  //   }
+    if (!response.ok) {
+      if(result.message == "User aldready exist") {
+        alert("User Aldready exists");
+      }
+    }
     
-  //   if (response.ok) {
+    if (response.ok) {
       
-  //     console.log(result);
-  //     setName("");
-  //     setEmail("");
-  //     setphoneNumber("");
-  //     setPassword("");
-  //     setrole("");
+      console.log(result);
+      setName("");
+      setEmail("");
+      setphoneNumber("");
+      setPassword("");
+      setuserId("");
 
-  //     alert("Registered Successfully");
-  //       navigate("/login");
+      alert("Registered Successfully");
+        // navigate("/login");
 
-  //   }
+    }
   };
 
 
@@ -76,18 +76,31 @@ const Register = () => {
               placeholder="Enter your name"
               required
             />
+            </div>
+
+            <div className="mb-4">
+            <label htmlFor="name" className="block text-white text-xl">
+              User Id
+            </label>
+            <input
+              type="text"
+              id="userId"
+              value={userId}
+              onChange={(e) =>
+                
+                setuserId(
+                  e.target.value  
+                )
+
+              }
+              className="text-black text-xl w-full px-3 py-2 mt-1 border rounded focus:outline-none focus:ring focus:border-blue-300"
+              placeholder="Enter User Id"
+              required
+            />
+            </div>
 
 
-          <button
-            type="submit"
-            className="w-full bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 focus:outline-none focus:bg-blue-700"
-            onClick={handleSubmit}
-          >
-            Register
-          </button>
-          </div>
-{/* 
-          <div className="mb-4">
+      <div className="mb-4">
             <label htmlFor="email" className="block text-white text-xl">
               Email
             </label>
@@ -96,26 +109,12 @@ const Register = () => {
               id="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-3 py-2 mt-1 border rounded focus:outline-none focus:ring text-white text-xl"
+              className="w-full px-3 py-2 mt-1 border rounded focus:outline-none focus:ring text-black text-xl"
               placeholder="Enter your email"
               required
             />
           </div>
 
-          <div className="mb-4">
-            <label htmlFor="phoneNumber" className="block text-white text-xl">
-              Phone number
-            </label>
-            <input
-              type="text"
-              id="phoneNumber"
-              value={phoneNumber}
-              onChange={(e) => setphoneNumber(e.target.value)}
-              className="w-full px-3 py-2 mt-1 border rounded focus:outline-none focus:ring text-white text-xl"
-              placeholder="Enter your phone number"
-              required
-            />
-          </div>
 
           <div className="mb-4">
             <label htmlFor="password" className="block text-white text-xl">
@@ -126,25 +125,46 @@ const Register = () => {
               id="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-3 py-2 mt-1 border rounded focus:outline-none focus:ring text-white text-xl"
+              className="w-full px-3 py-2 mt-1 border rounded focus:outline-none focus:ring text-black text-xl"
               placeholder="Enter your password"
               required
             />
           </div>
 
+          
+
+
           <div className="mb-4">
-            <label htmlFor="role" className="block text-white text-xl">Select Role</label>
-            <select
-              id="role"
-              value={role}
-              onChange={(e) => setrole(e.target.value)}
-              className="w-full px-3 py-2 mt-1 border rounded focus:outline-none focus:ring text-white text-xl"
+            <label htmlFor="phoneNumber" className="block text-white text-xl">
+              Phone number
+            </label>
+            <input
+              type="text"
+              id="phoneNumber"
+              value={phoneNumber}
+              onChange={(e) => setphoneNumber(e.target.value)}
+              className="w-full px-3 py-2 mt-1 border rounded focus:outline-none focus:ring text-black text-xl"
+              placeholder="Enter your phone number"
               required
-            >
-              <option value="user">user</option>
-              <option value="admin">admin</option>
-            </select>
+            />
           </div>
+
+
+          <button
+            type="submit"
+            className="w-full bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 focus:outline-none focus:bg-blue-700"
+            onClick={handleSubmit}
+          >
+            Register
+          </button>
+          {/* </div> */}
+{/* 
+          
+
+          
+
+          
+
 
           
           */
