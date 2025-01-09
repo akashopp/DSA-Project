@@ -6,18 +6,19 @@ import { useNavigate } from "react-router-dom";
 
 const Register = () => {
   const [name, setName] = useState("");
-  // const [email, setEmail] = useState("");
-  // const [phoneNumber, setphoneNumber] = useState(0);
-  // const [password, setPassword] = useState("");
-  // const [role, setrole] = useState("user");
+  const [email, setEmail] = useState("");
+  const [phoneNumber, setphoneNumber] = useState(0);
+  const [password, setPassword] = useState("");
+  const [userId, setuserId] = useState("");
+
   // const navigate = useNavigate();
 
 
   const handleSubmit = async (e) => {
-    console.log(name)
-  //   e.preventDefault();
+    e.preventDefault();
     
-  //   const addUser = { name, email, phoneNumber, password, role };
+    const addUser = { name, userId, email, phoneNumber, password };
+    console.log(addUser)
 
   //   const response = await fetch("http://localhost:8000/user/register", {
   //     method: "POST",
