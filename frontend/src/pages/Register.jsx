@@ -20,13 +20,13 @@ const Register = () => {
     const addUser = { name, userId, email, phoneNumber, password };
     console.log(addUser)
 
-  //   const response = await fetch("http://localhost:8000/user/register", {
-  //     method: "POST",
-  //     body: JSON.stringify(addUser),
-  //     headers: {
-  //       "Content-Type": "application/json"
-  //     }
-  //   })
+    // const response = await fetch("http://localhost:8000/user/register", {
+    //   method: "POST",
+    //   body: JSON.stringify(addUser),
+    //   headers: {
+    //     "Content-Type": "application/json"
+    //   }
+    // })
     
   //   const result = await response.json();
     
