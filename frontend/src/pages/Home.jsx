@@ -1,8 +1,12 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import { Outlet, useNavigate } from 'react-router-dom';
 
-function Home() {
+function Home(props) {
+    useEffect(() => {
+      // console.log(props.userId)
+    }, [])
   const navigate=useNavigate();
+  
   return (
     <>
       <div className='flex'>

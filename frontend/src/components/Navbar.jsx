@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import logo from "../assets/logo.png"
 import { CiLight } from "react-icons/ci";
 import { Link } from 'react-router-dom';
@@ -6,8 +6,14 @@ import { RocketIcon } from './RocketIcon';
 
 import { Outlet, useNavigate } from 'react-router-dom';
 
-function Navbar() {
+function Navbar(props) {
   const navigate=useNavigate();
+  const userId = props.userId;
+  
+  useEffect(() => {
+    console.log(userId)
+  }, [])
+  
   return (
     <>
 

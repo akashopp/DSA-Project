@@ -11,7 +11,7 @@ const Register = () => {
   const [password, setPassword] = useState("");
   const [userId, setuserId] = useState("");
 
-  // const navigate = useNavigate();
+  const navigate = useNavigate();
 
 
   const handleSubmit = async (e) => {
@@ -46,7 +46,7 @@ const Register = () => {
       setuserId("");
 
       alert("Registered Successfully");
-        // navigate("/login");
+        navigate("/login");
 
     }
   };
@@ -134,8 +134,6 @@ const Register = () => {
             />
           </div>
 
-          
-
 
           <div className="mb-4">
             <label htmlFor="phoneNumber" className="block text-white text-xl">
@@ -152,6 +150,17 @@ const Register = () => {
             />
           </div>
 
+        <div className="flex justify-center items-center bg-[rgb(57, 57, 57)]">
+      <div className=" bg-[rgb(57, 57, 57)] rounded shadow-md text-white">
+        {/* <h2 className="text-2xl font-bold mb-6 text-center">Register</h2> */}
+
+        <div className="mb-3 text-center">
+          <Link to="/login" className="text-blue-500 hover:underline">
+            Already have an account? Login
+          </Link>
+        </div>
+      </div>
+    </div>
 
           <button
             type="submit"
@@ -176,17 +185,11 @@ const Register = () => {
           }
         </form>
     {/* <Navbar isLogged={false}/>
-    <div className="flex justify-center items-center h-screen bg-[rgb(57, 57, 57)]  m-20">
-      <div className="w-full max-w-md p-8 bg-[rgb(57, 57, 57)] rounded shadow-md text-white border-2 border-white">
-        <h2 className="text-2xl font-bold mb-6 text-center">Register</h2>
+    
+    
+   
 
-        <div className="mt-6 text-center">
-          <Link to="/login" className="text-blue-500 hover:underline">
-            Already have an account? Login
-          </Link>
-        </div>
-      </div>
-    </div>
+
     <Footer/> */}
     </>
   );

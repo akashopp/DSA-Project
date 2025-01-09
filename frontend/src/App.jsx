@@ -7,6 +7,7 @@ import Practice from "./pages/Practice";
 import Roadmap from "./pages/Roadmap";
 import Submit from "./pages/Submit";
 import Register from "./pages/Register";
+import Login from "./pages/Login";
 
 function App() {
  
@@ -14,15 +15,17 @@ function App() {
   return (
     <>
       <Router>
-        <Navbar />
+        <Navbar userId=""/>
         <Routes>
-        <Route path="/" element={<Home />} />
+        <Route path="/" element={<Home/>} />
         <Route path="/courses" element={<Courses />} />
         <Route path="/lessons" element={<Lessons />} />
         <Route path="/practice" element={<Practice />} />
         <Route path="/roadmap" element={<Roadmap />} />
         <Route path="/submit" element={<Submit />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/login" element={<Login />} />
+
       </Routes>
       </Router>
     </>

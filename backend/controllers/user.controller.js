@@ -49,6 +49,41 @@ export const getUser = async(req, res) => {
   }
 }
 
+export const findUser = async(req, res) => {
+  try {
+    const {userId, password} = req.body;
+
+    const flag = await User.findOne({userId: userId});
+
+    if(!flag) {
+      return res.status(400).json({
+        "message" : "User not found",
+        success: false
+      })
+    }
+
+    const pass = flag.password;
+
+    if(pass != password) {
+      return res.status(400).json({
+        "message" : "Incorrect password",
+        success: false
+      })
+    }
+
+    const userid = flag._id.toString();
+
+    return res.status(200).json({
+      message: "User exist",
+      user_id : userid,
+      success: true
+    })
+    
+  } catch (error) {
+    console.log(error);
+  }
+}
+
 export const getUserSolved = async(req, res) => {
   try {
     const userId = await req.params.id;

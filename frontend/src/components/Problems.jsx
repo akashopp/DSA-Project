@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
 
 // ProblemManager class to handle grouping and sorting by difficulty
 class ProblemManager {
@@ -29,13 +30,16 @@ class ProblemManager {
   }
 }
 
-function Problems() {
+function Problems(props) {
   const [isExpanded, setIsExpanded] = useState({}); // Track expanded/collapsed state for each topic
   const [problems, setProblems] = useState([]); // Store the problem list in state
   const [groupedProblems, setGroupedProblems] = useState({}); // Store the grouped problems by topic
   const [userProblems, setUserProblems] = useState([]); // Store the user's problemId list
-
-  const userId = '67529af276dea13c3d50fbf6'; // This should come from authentication or session data.
+  
+  const {tempUserId} = useParams(); 
+  const userId = '67529af276dea13c3d50fbf6';
+  // const userId = tempUserId;
+  // This should come from authentication or session data.
 
   // Fetch problems from the API
   const fetchProblems = async () => {
