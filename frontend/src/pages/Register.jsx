@@ -57,6 +57,9 @@ const Register = () => {
         <form 
         // onSubmit={handleSubmit}
         >
+        <div className="mx-96 border-white border-2 p-4 my-3">
+
+
           <div className="mb-4">
             <label htmlFor="name" className="block text-white text-xl">
               Name
@@ -157,6 +160,7 @@ const Register = () => {
           >
             Register
           </button>
+        </div>
           {/* </div> */}
 {/* 
           
