@@ -1,19 +1,20 @@
-import express from 'express'
+import express from 'express';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url'; // For converting URL to file path
 import { dirname } from 'path'; // For getting directory name from a file path
-// Promisify the exec function to use async/await
 import { exec, spawn } from 'child_process';
 import util from 'util';
-
 
 const execPromisified = util.promisify(exec);
 const router = express.Router();
 
 // Get the current directory path
-const __filename = fileURLToPath(import.meta.url); // Convert URL to file path
-const __dirname = dirname(__filename); // Get directory name from file path
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+// Log directory paths
+console.log("Current directory:", __dirname);
 
 router.post('/compile', async (req, res) => {
   const { language, code } = req.body;
@@ -38,6 +39,7 @@ router.post('/compile', async (req, res) => {
   const filePath = path.join(__dirname, filename);
   const compiledFilePath = path.join(__dirname, execFileName);
 
+  console.log("Writing code to file:", filePath);
   fs.writeFileSync(filePath, code);
 
   let compileCmd;
@@ -50,19 +52,21 @@ router.post('/compile', async (req, res) => {
   }
 
   try {
+    console.log("Compilation command:", compileCmd);
     if (language !== 'python') {
       const { stderr } = await execPromisified(compileCmd, { timeout: 5000 });
       if (stderr) {
+        console.error("Compilation error:", stderr);
         return res.status(500).send({ output: `Compilation Error: ${stderr}` });
       }
     }
     res.status(200).send({ message: 'Compilation successful.' });
   } catch (err) {
+    console.error("Compilation exception:", err.message);
     return res.status(500).send({ output: `Compilation Error: ${err.message}` });
   }
 });
 
-// Define the POST route for running code
 router.post('/run', (req, res) => {
   const { language, input } = req.body;
 
@@ -73,9 +77,12 @@ router.post('/run', (req, res) => {
       ? 'Solution.class'
       : 'solution.py';
 
-  const compiledFilePath = path.join(__dirname, execFileName);
+  const compiledFilePath = path.normalize(path.join(__dirname, execFileName));
+
+  console.log("Compiled file path:", compiledFilePath);
 
   if (!fs.existsSync(compiledFilePath)) {
+    console.error("Executable file not found.");
     return res.status(400).send({ output: 'Executable file not found. Please compile the code first.' });
   }
 
@@ -91,13 +98,17 @@ router.post('/run', (req, res) => {
     processArgs = [compiledFilePath];
   }
 
+  console.log("Run command:", runCmd, "with args:", processArgs);
+
   const runProcess = spawn(runCmd, processArgs, { stdio: ['pipe', 'pipe', 'pipe'] });
-  
+
   const timer = setTimeout(() => {
-    runProcess.kill('SIGKILL'); // Forcefully kill the process
+    console.error("Killing process due to timeout.");
+    runProcess.kill('SIGKILL');
   }, 1500);
 
   if (input) {
+    console.log("Providing input to the process.");
     runProcess.stdin.write(input);
     runProcess.stdin.end();
   }
@@ -107,14 +118,18 @@ router.post('/run', (req, res) => {
 
   runProcess.stdout.on('data', (data) => {
     output += data;
+    console.log("Process stdout:", data.toString());
   });
 
   runProcess.stderr.on('data', (data) => {
     errors += data;
+    console.error("Process stderr:", data.toString());
   });
 
   runProcess.on('close', (code) => {
+    clearTimeout(timer);
     if (code !== 0) {
+      console.error("Process exited with non-zero code:", code);
       return res.status(500).send({
         output: `${errors || 'Unknown runtime error / Timeout (Execution > 7s)'}`,
       });
@@ -123,47 +138,51 @@ router.post('/run', (req, res) => {
   });
 });
 
-
-// Define a new DELETE route to delete compiled files after execution
 router.delete('/delete-executable', (req, res) => {
-  const { language } = req.body; // Identify the language type
+  const { language } = req.body;
 
-  // Determine the filename of the compiled executable based on the language
   const compiledFilePath =
     language === 'cpp'
-      ? path.join(__dirname, 'solution.exe') // C++ executable
+      ? path.join(__dirname, 'solution.exe')
       : language === 'java'
-      ? path.join(__dirname, 'Solution.class') // Java compiled file
+      ? path.join(__dirname, 'Solution.class')
       : null;
 
-  // console.log(compiledFilePath, fs.existsSync(compiledFilePath));
+  console.log("Attempting to delete file:", compiledFilePath);
 
-  // If a compiled file exists, delete it
   if (compiledFilePath && fs.existsSync(compiledFilePath)) {
     fs.unlink(compiledFilePath, (err) => {
       if (err) {
+        console.error("Error deleting file:", err.message);
         return res.status(500).send({ output: `Error deleting executable: ${err.message}` });
       }
-      // console.log(`Deleted ${compiledFilePath}`);
+      console.log("Deleted file successfully.");
       res.status(200).send({ message: 'Compiled executable deleted successfully.' });
     });
   } else {
-    return res.status(200).send({ output: 'Compiled file not found.' });
+    console.warn("File not found for deletion:", compiledFilePath);
+    res.status(200).send({ output: 'Compiled file not found.' });
   }
 });
 
+// Ensure normalized paths for all file-related operations
+function normalizePath(filepath) {
+  return path.normalize(filepath);
+}
 
-// Define the POST route for submitting code
+// Submit route unchanged but logs added
 router.post('/submit', async (req, res) => {
   const { language, problemName, testNumber } = req.body;
-  console.log("running :", problemName, " test :", testNumber);
+  console.log("Submit request for:", problemName, "Test:", testNumber);
+
   if (!problemName || !testNumber) {
     return res.status(400).send({ output: 'Problem name and test number are required.' });
   }
 
-  const testCaseDir = path.join(__dirname, '..', 'testcases', problemName);
-  const inputFile = path.join(testCaseDir, `input${testNumber}.txt`);
-  const expectedOutputFile = path.join(testCaseDir, `output${testNumber}.txt`);
+  const testCaseDir = normalizePath(path.join(__dirname, '..', 'testcases', problemName));
+  const inputFile = normalizePath(path.join(testCaseDir, `input${testNumber}.txt`));
+  const expectedOutputFile = normalizePath(path.join(testCaseDir, `output${testNumber}.txt`));
+  console.log("Input file:", inputFile, "Expected output file:", expectedOutputFile);
 
   const execFileName =
     language === 'cpp'
@@ -172,9 +191,10 @@ router.post('/submit', async (req, res) => {
       ? 'Solution.class'
       : 'solution.py';
 
-  const compiledFilePath = path.join(__dirname, execFileName);
+  const compiledFilePath = normalizePath(path.join(__dirname, execFileName));
 
   if (!fs.existsSync(compiledFilePath)) {
+    console.error("Executable file not found.");
     return res.status(400).send({ output: 'Executable file not found. Please compile the code first.' });
   }
 
@@ -187,7 +207,8 @@ router.post('/submit', async (req, res) => {
   const startTime = process.hrtime();
 
   const timer = setTimeout(() => {
-    child.kill('SIGKILL'); // Forcefully kill the process
+    console.error("Killing process due to timeout.");
+    child.kill('SIGKILL');
   }, 2000);
 
   let output = '';
@@ -195,10 +216,12 @@ router.post('/submit', async (req, res) => {
 
   child.stdout.on('data', (data) => {
     output += data;
+    console.log("Child stdout:", data.toString());
   });
 
   child.stderr.on('data', (data) => {
     errors += data;
+    console.error("Child stderr:", data.toString());
   });
 
   child.on('close', (code) => {
@@ -207,6 +230,7 @@ router.post('/submit', async (req, res) => {
     const runtime = code === 0 ? `${process.hrtime(startTime)[1] / 1e6}ms` : 'na';
 
     if (code !== 0) {
+      console.error("Child process exited with non-zero code:", code);
       return res.status(500).send({ output: `Runtime Error: ${errors || 'Time Limit Exceeded'}`, runtime });
     }
 
@@ -216,10 +240,10 @@ router.post('/submit', async (req, res) => {
     const message = isPass
       ? 'Test passed successfully'
       : `Expected: ${expectedOutput.trim()}, but got: ${output.trim()}`;
-    console.log('output : ', output);
-    console.log('expected : ', expectedOutput);
-    console.log('status : ', status);
-    console.log('runtime : ', runtime);
+    console.log('Output:', output.trim());
+    console.log('Expected:', expectedOutput.trim());
+    console.log('Status:', status);
+    console.log('Runtime:', runtime);
     res.send({ output: output.trim(), status, message, runtime });
   });
 });
