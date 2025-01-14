@@ -1,19 +1,19 @@
 import { User } from "../models/user.model.js";
 import mongoose from "mongoose";
+import session from "express-session";
 
-export const CreateUser = async(req, res) => {
-
+// Create a new user
+export const CreateUser = async (req, res) => {
   try {
-    
-    const {name, userId, email, phoneNumber, password, problemId} = req.body;
+    const { name, userId, email, phoneNumber, password, problemId } = req.body;
 
-    const flag = await User.findOne({userId: userId});
+    const existingUser = await User.findOne({ userId });
 
-    if(flag) {
+    if (existingUser) {
       return res.status(400).json({
-        message: "User already exist",
-        success: false
-      })
+        message: "User already exists",
+        success: false,
+      });
     }
 
     await User.create({
@@ -22,155 +22,213 @@ export const CreateUser = async(req, res) => {
       email,
       phoneNumber,
       password,
-      problemId
-    })
+      problemId,
+    });
 
-    return res.status(200).json({
+    return res.status(201).json({
       message: "User added successfully",
-      success: true
-    })
-    
+      success: true,
+    });
   } catch (error) {
-    console.log(error);
+    console.error(error);
+    res.status(500).json({
+      message: "Internal server error",
+      success: false,
+    });
   }
+};
 
-}
-
-export const getUser = async(req, res) => {
+// Get all users
+export const getUser = async (req, res) => {
   try {
     const items = await User.find();
-
-    return res.status(200).json({
-      items
-    })
-    
+    return res.status(200).json({ items });
   } catch (error) {
-    console.log(error);
+    console.error(error);
+    res.status(500).json({ message: "Internal server error" });
   }
-}
+};
 
-export const findUser = async(req, res) => {
+// Find user by credentials
+export const findUser = async (req, res) => {
   try {
-    const {userId, password} = req.body;
+    const { userId } = req.body;
 
-    const flag = await User.findOne({userId: userId});
+    // Find the user by userId
+    const user = await User.findOne({ userId });
 
-    if(!flag) {
+    if (!user) {
       return res.status(400).json({
-        "message" : "User not found",
-        success: false
-      })
+        message: "User not found",
+        success: false,
+      });
     }
 
-    const pass = flag.password;
-
-    if(pass != password) {
-      return res.status(400).json({
-        "message" : "Incorrect password",
-        success: false
-      })
-    }
-
-    const userid = flag._id.toString();
-
+    // Return response if the user exists
     return res.status(200).json({
-      message: "User exist",
-      user_id : userid,
-      success: true
-    })
-    
+      message: "User exists",
+      user_id: user._id.toString(),
+      success: true,
+    });
   } catch (error) {
-    console.log(error);
+    console.error(error);
+    res.status(500).json({
+      message: "Internal server error",
+      success: false,
+    });
   }
-}
+};
 
-export const getUserSolved = async(req, res) => {
+// Get solved problems for a user
+export const getUserSolved = async (req, res) => {
   try {
-    const userId = await req.params.id;
+    const userId = req.params.id;
 
     const user = await User.findById(userId);
 
-    if(!user) {
+    if (!user) {
       return res.status(400).json({
-        "message" : "User not found",
-        "success": false
-      })
+        message: "User not found",
+        success: false,
+      });
     }
 
     return res.status(200).json({
-      "problems" : user.problemId
-    })
-
+      problems: user.problemId,
+    });
   } catch (error) {
-    console.log(error);
+    console.error(error);
+    res.status(500).json({ message: "Internal server error" });
   }
-}
+};
 
-export const AddProblem = async(req, res) => {
-
+// Add a problem to the user's solved list
+export const AddProblem = async (req, res) => {
   try {
-    
-    const {userId, problemId} = req.body;
+    const { userId, problemId } = req.body;
 
-    if(!mongoose.Types.ObjectId.isValid(userId)) {
-      return res.status(200).json({
-        message : "User doesn't exist"
-      })
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      return res.status(400).json({ message: "Invalid user ID" });
     }
 
     const user = await User.findById(userId);
-    
-    if(user.problemId.includes(problemId)) {
+
+    if (user.problemId.includes(problemId)) {
       return res.status(400).json({
-        message: "Problem already solved"
-      })
+        message: "Problem already solved",
+      });
     }
 
     user.problemId.push(problemId);
     await user.save();
-  
+
     return res.status(200).json({
-      "message" : "User exist",
-      "problem": user.problemId
-    })
-    
+      message: "Problem added successfully",
+      problems: user.problemId,
+    });
   } catch (error) {
-    console.log(error);
+    console.error(error);
+    res.status(500).json({ message: "Internal server error" });
   }
+};
 
-}
-
-
-export const DeleteProblem = async(req, res) => {
-
+// Remove a problem from the user's solved list
+export const DeleteProblem = async (req, res) => {
   try {
-    
-    const {userId, problemId} = req.body;
-    
-    if(!mongoose.Types.ObjectId.isValid(userId)) {
-      return res.status(200).json({
-        message : "User doesn't exist"
-      })
-    }
-    
-    const user = await User.findOne({_id : userId});
+    const { userId, problemId } = req.body;
 
-    if(!user.problemId.includes(problemId)) {
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      return res.status(400).json({ message: "Invalid user ID" });
+    }
+
+    const user = await User.findById(userId);
+
+    if (!user.problemId.includes(problemId)) {
       return res.status(400).json({
-        message: "Problem didn't solved"
-      })
+        message: "Problem not solved",
+      });
     }
 
-    user.problemId = user.problemId.filter(problem => problem != problemId);
+    user.problemId = user.problemId.filter((problem) => problem !== problemId);
     await user.save();
-  
-    return res.status(200).json({
-      message : "Problem deleted successfully",
-      success: true
-    })
-    
-  } catch (error) {
-    console.log(error);
-  }
 
-}
+    return res.status(200).json({
+      message: "Problem deleted successfully",
+      problems: user.problemId,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+export const LoginUser = async (req, res) => {
+  try {
+    const { userId, password } = req.body;
+    
+    // Find the user by userId
+    const user = await User.findOne({ userId });
+
+    if (!user) {
+      return res.status(400).json({
+        message: "User not found",
+        success: false,
+      });
+    }
+
+    // Check if the password matches
+    if (user.password !== password) {
+      return res.status(400).json({
+        message: "Incorrect password",
+        success: false,
+      });
+    }
+
+    // Create session for the user
+    req.session.user = {
+      id: user._id.toString(),
+      userId: user.userId,
+      name: user.name,
+    };
+
+    // req.session.visited = true;
+
+    // Save the session
+    req.session.save((err) => {
+      if (err) {
+        console.error('Error saving session:', err);
+        return res.status(500).json({ message: "Error saving session" });
+      }
+
+      console.log('Session after save:', req.session);
+
+      return res.status(200).json({
+        message: "User authenticated",
+        success: true,
+        user_id: user._id.toString()
+      });
+    });
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+// Logout user
+export const LogoutUser = (req, res) => {
+  req.session.destroy((err) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({
+        message: "Unable to log out",
+        success: false,
+      });
+    }
+    res.clearCookie("connect.sid");
+    return res.status(200).json({
+      message: "Logged out successfully",
+      success: true,
+    });
+  });
+};

@@ -13,6 +13,8 @@ import { Moon, Sun, Code2, Play, Terminal } from "lucide-react";
 import { EditorState } from "@uiw/react-codemirror";
 import { autocompletion } from "@codemirror/autocomplete";
 import { closeBrackets } from "@codemirror/autocomplete";
+import { toast } from "react-toastify";
+import { useNavigate } from "react-router-dom";
 
 // Error Boundary Component to catch errors in the app
 
@@ -30,7 +32,8 @@ const CodeEditor = () => {
   const [testCases, setTestCases] = useState([]);
   const [testResults, setTestResults] = useState([]);
   const [compiling, setCompiling] = useState(false);
-
+  const navigate = useNavigate();
+  const userId = localStorage.getItem("userSession")
   // Example templates for code
   const templates = {
     cpp: `#include <bits/stdc++.h>
@@ -67,11 +70,37 @@ public class Solution {
   };
 
   useEffect(() => {
+      if (!userId) {
+        // If the user is not logged in, show a toast and redirect to /register
+        toast.warn("You are not logged in. Please register.", {
+          position: "top-center",
+          autoClose: 5000, // The toast will be visible for 5 seconds
+          onClose: () => {
+            // Redirect the user to the /register page after the toast is closed
+            navigate("/register");
+          }
+        });
+      } else {
+        console.log("User ID:", userId);
+      }
+    }, [userId, navigate]);
+
+  useEffect(() => {
     setCode(templates[language]);
   }, [language]);
 
   // Fetch test cases for the given problem name
   const fetchTestCases = async () => {
+    if(!userId) {
+      toast.warn("You are not logged in. Please register.", {
+        position: "top-center",
+        autoClose: 5000, // The toast will be visible for 5 seconds
+        onClose: () => {
+          // Redirect the user to the /register page after the toast is closed
+          navigate("/register");
+        }
+      });
+    }
     if (!problemName) {
       setError("Problem name is required!");
       return;
@@ -87,6 +116,7 @@ public class Solution {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ problemName }), // Send the problem name in the request body
+        credentials: "include",
       });
   
       const data = await response.json();
@@ -112,6 +142,16 @@ public class Solution {
 
   // Handle running code with the given input (for the "Run" button)
   const handleRunCode = async () => {
+    if(!userId) {
+      toast.warn("You are not logged in. Please register.", {
+        position: "top-center",
+        autoClose: 5000, // The toast will be visible for 5 seconds
+        onClose: () => {
+          // Redirect the user to the /register page after the toast is closed
+          navigate("/register");
+        }
+      });
+    }
     setLoading(true);
     setCompiling(true); // Show compiling animation
     setTestResults([]);
@@ -132,7 +172,8 @@ public class Solution {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ language, code, problemName }),
+        body: JSON.stringify({ language, code, problemName,  }),
+        credentials: "include",
       });
   
       if (!compileResponse.ok) {
@@ -151,8 +192,9 @@ public class Solution {
           },
           body: JSON.stringify({
             language,
-            input
+            input,
           }),
+          credentials: "include",
         });
 
         if (!response.ok) {
@@ -185,6 +227,7 @@ public class Solution {
               "Content-Type": "application/json",
             },
             body: JSON.stringify({ language }),
+            credentials: "include",
           }
         );
         if (!deleteResponse.ok) {
@@ -197,6 +240,16 @@ public class Solution {
   };
 
   const handleSubmit = async () => {
+    if(!userId) {
+      toast.warn("You are not logged in. Please register.", {
+        position: "top-center",
+        autoClose: 5000, // The toast will be visible for 5 seconds
+        onClose: () => {
+          // Redirect the user to the /register page after the toast is closed
+          navigate("/register");
+        }
+      });
+    }
     if (!problemName) {
       setError("Please enter a problem name first!");
       return;
@@ -228,6 +281,7 @@ public class Solution {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({ language, code, problemName }),
+        credentials: "include",
       });
   
       if (!compileResponse.ok) {
@@ -253,6 +307,7 @@ public class Solution {
               problemName,
               testNumber: i + 1,
             }),
+            credentials: "include",
           });
   
           if (!response.ok) {
@@ -300,6 +355,7 @@ public class Solution {
               "Content-Type": "application/json",
             },
             body: JSON.stringify({ language }),
+            credentials: "include",
           }
         );
         if (!deleteResponse.ok) {

@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
+import { toast } from "react-toastify";
+import 'react-toastify/dist/ReactToastify.css'; 
 
 // ProblemManager class to handle grouping and sorting by difficulty
 class ProblemManager {
@@ -30,21 +32,37 @@ class ProblemManager {
   }
 }
 
-function Problems(props) {
+function Problems() {
   const [isExpanded, setIsExpanded] = useState({}); // Track expanded/collapsed state for each topic
   const [problems, setProblems] = useState([]); // Store the problem list in state
   const [groupedProblems, setGroupedProblems] = useState({}); // Store the grouped problems by topic
   const [userProblems, setUserProblems] = useState([]); // Store the user's problemId list
+  const navigate = useNavigate();
+  const userId = localStorage.getItem("userSession");
   
-  const {tempUserId} = useParams(); 
-  const userId = '67529af276dea13c3d50fbf6';
-  // const userId = tempUserId;
-  // This should come from authentication or session data.
+  useEffect(() => {
+    if (!userId) {
+      // If the user is not logged in, show a toast and redirect to /register
+      toast.warn("You are not logged in. Please register.", {
+        position: "top-center",
+        autoClose: 5000, // The toast will be visible for 5 seconds
+        onClose: () => {
+          // Redirect the user to the /register page after the toast is closed
+          navigate("/register");
+        }
+      });
+    } else {
+      console.log("User ID:", userId);
+    }
+  }, [userId, navigate]);
 
   // Fetch problems from the API
   const fetchProblems = async () => {
     try {
-      const response = await fetch('http://localhost:5000/problems');
+      const response = await fetch('http://localhost:5000/problems', {
+        method: "GET", 
+        credentials: "include",
+      });
       if (response.ok) {
         const data = await response.json();
         setProblems(data); // Update the problems state with the fetched data
@@ -63,7 +81,10 @@ function Problems(props) {
   // Fetch user problems
   const fetchUserProblems = async () => {
     try {
-      const response = await fetch(`http://localhost:5000/user/getproblems/${userId}`);
+      const response = await fetch(`http://localhost:5000/user/getproblems/${userId}`, {
+        method: "GET", 
+        credentials: "include",
+      });
       if (response.ok) {
         const userData = await response.json();
         setUserProblems(userData.problems); // Set the user's problemId list
@@ -109,6 +130,7 @@ function Problems(props) {
           userId, // The current user's ID
           problemId, // The ID of the problem being toggled
         }),
+        credentials: "include",
       });
 
       if (response.ok) {
@@ -117,6 +139,14 @@ function Problems(props) {
         fetchUserProblems(); // Fetch updated user problems list
       } else {
         console.error('Failed to update user problem list');
+        toast.warn("You are not logged in. Please register.", {
+          position: "top-center",
+          autoClose: 5000, // The toast will be visible for 5 seconds
+          onClose: () => {
+            // Redirect the user to the /register page after the toast is closed
+            navigate("/register");
+          }
+        });
       }
     } catch (error) {
       console.error('Error updating user problem list:', error);

@@ -1,4 +1,5 @@
-import {BrowserRouter as Router ,Routes,Route} from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { useEffect } from "react";
 import Navbar from "./components/Navbar";
 import Courses from "./pages/Courses";
 import Lessons from "./pages/Lessons";
@@ -8,28 +9,49 @@ import Roadmap from "./pages/Roadmap";
 import Submit from "./pages/Submit";
 import Register from "./pages/Register";
 import Login from "./pages/Login";
+import { ToastContainer } from 'react-toastify';
+
+// Function to validate the session
+const validateSession = async () => {
+  try {
+    const response = await fetch('http://localhost:5000/', {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      credentials: "include", // Include credentials (cookies, auth tokens, etc.)
+    });
+    const data = await response.json();
+    console.log("Session validated: ", data);
+  } catch (err) {
+    console.log('Error validating session: ', err);
+  }
+};
 
 function App() {
- 
+  // Call validateSession when the component mounts
+  useEffect(() => {
+    validateSession();
+  }, []);
 
   return (
     <>
       <Router>
-        <Navbar userId=""/>
+        <Navbar userId /> {/* If userId is dynamic, you can pass it accordingly */}
         <Routes>
-        <Route path="/" element={<Home/>} />
-        <Route path="/courses" element={<Courses />} />
-        <Route path="/lessons" element={<Lessons />} />
-        <Route path="/practice" element={<Practice />} />
-        <Route path="/roadmap" element={<Roadmap />} />
-        <Route path="/submit" element={<Submit />} />
-        <Route path="/register" element={<Register />} />
-        <Route path="/login" element={<Login />} />
-
-      </Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/courses" element={<Courses />} />
+          <Route path="/lessons" element={<Lessons />} />
+          <Route path="/practice" element={<Practice />} />
+          <Route path="/roadmap" element={<Roadmap />} />
+          <Route path="/submit" element={<Submit />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/login" element={<Login />} />
+        </Routes>
       </Router>
+      <div><ToastContainer></ToastContainer></div>
     </>
-  )
+  );
 }
 
-export default App
+export default App;

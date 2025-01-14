@@ -12,32 +12,39 @@ const router = express.Router();
 // Get the current directory path
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
+const __codes = path.join(__dirname, '..', 'user_codes');
+console.log(__codes);
 
 // Log directory paths
 console.log("Current directory:", __dirname);
 
 router.post('/compile', async (req, res) => {
+  console.log('user : ', req.session);
+  console.log('sid : ', req.sessionID);
+  if(req.session.user == undefined) {
+    return res.status(401).send({ output: 'User not signed in.' });
+  }
+  const userId = req.session.user.id;
   const { language, code } = req.body;
-
   if (!language || !code) {
     return res.status(400).send({ output: 'Language and code are required.' });
   }
 
   const filename =
     language === 'cpp'
-      ? 'solution.cpp'
+      ? `${userId}.cpp`
       : language === 'java'
-      ? 'Solution.java'
-      : 'solution.py';
+      ? `${userId}.java`
+      : `${userId}.py`;
   const execFileName =
     language === 'cpp'
-      ? 'solution.exe'
+      ? `${userId}.exe`
       : language === 'java'
-      ? 'Solution.class'
-      : 'solution.py';
+      ? `${userId}.class`
+      : `${userId}.py`;
 
-  const filePath = path.join(__dirname, filename);
-  const compiledFilePath = path.join(__dirname, execFileName);
+  const filePath = path.join(__codes, filename);
+  const compiledFilePath = path.join(__codes, execFileName);
 
   console.log("Writing code to file:", filePath);
   fs.writeFileSync(filePath, code);
@@ -68,16 +75,16 @@ router.post('/compile', async (req, res) => {
 });
 
 router.post('/run', (req, res) => {
+  const userId = req.session.user.id;
   const { language, input } = req.body;
-
   const execFileName =
     language === 'cpp'
-      ? 'solution.exe'
+      ? `${userId}.exe`
       : language === 'java'
-      ? 'Solution.class'
-      : 'solution.py';
+      ? `${userId}.class`
+      : `${userId}.py`;
 
-  const compiledFilePath = path.normalize(path.join(__dirname, execFileName));
+  const compiledFilePath = path.normalize(path.join(__codes, execFileName));
 
   console.log("Compiled file path:", compiledFilePath);
 
@@ -92,7 +99,7 @@ router.post('/run', (req, res) => {
     runCmd = compiledFilePath;
   } else if (language === 'java') {
     runCmd = 'java';
-    processArgs = ['-cp', __dirname, 'Solution'];
+    processArgs = ['-cp', __codes, 'Solution'];
   } else if (language === 'python') {
     runCmd = 'pypy3';
     processArgs = [compiledFilePath];
@@ -139,13 +146,17 @@ router.post('/run', (req, res) => {
 });
 
 router.delete('/delete-executable', (req, res) => {
+  if(req.session.user == undefined) {
+    return res.status(401).send({output : 'User not signed in.'})
+  }
+  const userId = req.session.user.id;
   const { language } = req.body;
 
   const compiledFilePath =
     language === 'cpp'
-      ? path.join(__dirname, 'solution.exe')
+      ? path.join(__codes, `${userId}.exe`)
       : language === 'java'
-      ? path.join(__dirname, 'Solution.class')
+      ? path.join(__codes, `${userId}.class`)
       : null;
 
   console.log("Attempting to delete file:", compiledFilePath);
@@ -172,9 +183,9 @@ function normalizePath(filepath) {
 
 // Submit route unchanged but logs added
 router.post('/submit', async (req, res) => {
+  const userId = req.session.user.id;
   const { language, problemName, testNumber } = req.body;
   console.log("Submit request for:", problemName, "Test:", testNumber);
-
   if (!problemName || !testNumber) {
     return res.status(400).send({ output: 'Problem name and test number are required.' });
   }
@@ -186,12 +197,14 @@ router.post('/submit', async (req, res) => {
 
   const execFileName =
     language === 'cpp'
-      ? 'solution.exe'
+      ? `${userId}.exe`
       : language === 'java'
-      ? 'Solution.class'
-      : 'solution.py';
+      ? `${userId}.class`
+      : `${userId}.py`;
 
-  const compiledFilePath = normalizePath(path.join(__dirname, execFileName));
+  const compiledFilePath = path.normalize(path.join(__codes, execFileName));
+
+  console.log("Compiled file path:", compiledFilePath);
 
   if (!fs.existsSync(compiledFilePath)) {
     console.error("Executable file not found.");
@@ -200,7 +213,7 @@ router.post('/submit', async (req, res) => {
 
   const child = spawn(
     language === 'cpp' ? compiledFilePath : language === 'java' ? 'java' : 'pypy3',
-    language === 'java' ? ['-cp', __dirname, 'Solution'] : [compiledFilePath],
+    language === 'java' ? ['-cp', __codes, 'Solution'] : [compiledFilePath],
     { stdio: [fs.openSync(inputFile, 'r'), 'pipe', 'pipe'] }
   );
 

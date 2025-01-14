@@ -5,16 +5,14 @@ int main() {
   int n, sum; cin >> n >> sum;
   vector<int> a(n);
   map<int, queue<int>> mp;
+  
   for(int i = 0; i < n; i++) {
     cin >> a[i];
     mp[a[i]].push(i);
   }
   for(int i = 0; i < n; i++) {
-    // for(int j = i + 1; j < n; j++) if(a[i] + a[j] == sum) {
-    //   cout << i << " " << j << endl;
-    //   return 0;
-    // } continue;
     int r = sum - a[i];
+    
     while(!mp[r].empty() && mp[r].front() <= i) mp[r].pop();
     if(!mp[r].empty()) {
       cout << i << " " << mp[r].front() << endl;
