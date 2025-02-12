@@ -51,6 +51,14 @@ mongoose.connect(process.env.URI).then(() => {
     app.use('/user', userRoutes);
     app.use('/problems', problemRoutes);
     app.use('/runcode', runcodeRoutes);
+    app.use((req, res, next) => {
+        if (!req.session.user) {
+          // If the session doesn't have the user object, log out and redirect
+          res.redirect('/login');
+        } else {
+          next();
+        }
+      });      
 
     // Start the server
     app.listen(process.env.PORT || 8000, (error) => {
