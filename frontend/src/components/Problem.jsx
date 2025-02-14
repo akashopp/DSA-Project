@@ -31,30 +31,43 @@ const Problem = () => {
   }[problem.difficulty] || 'text-gray-400';
 
   return (
-    <>
+    <div className="w-full px-4 py-6 bg-gray-900 shadow-lg rounded-lg mt-6 text-white">
+      <h1 className="text-2xl font-bold text-white mb-4">{problem.problemName}</h1>
+      <p className="text-lg"><strong className="text-gray-400">Difficulty:</strong> <span className={difficultyColor}>{problem.difficulty}</span></p>
+      <p className="text-lg"><strong className="text-gray-400">Topic:</strong> {problem.topic}</p>
+      <p className="mt-4 text-gray-300"><strong>Description:</strong> {problem.description}</p>
+
+      {/* Constraints */}
+      <p className="mt-4 text-gray-400 font-semibold">Constraints:</p>
+      <ul className="list-disc list-inside text-gray-300">
+        {problem.constraints?.map((constraint, index) => (
+          <li key={index}>{constraint}</li>
+        ))}
+      </ul>
+
+      {/* Input Format */}
+      <p className="mt-4 text-gray-400 font-semibold">Input Format:</p>
+      <pre className="bg-gray-800 text-gray-300 p-3 rounded-md whitespace-pre-wrap">{problem.input_format}</pre>
+
+      {/* Output Format */}
+      <p className="mt-4 text-gray-400 font-semibold">Output Format:</p>
+      <pre className="bg-gray-800 text-gray-300 p-3 rounded-md whitespace-pre-wrap">{problem.output_format}</pre>
+
+      <a 
+        href={problem.url} 
+        target="_blank" 
+        rel="noopener noreferrer" 
+        className="block mt-4 text-blue-400 hover:underline"
+      >
+        View on LeetCode
+      </a>
+
+      {/* Code Submission Section */}
       <div className="w-full px-4 py-6 bg-gray-900 shadow-lg rounded-lg mt-6 text-white">
-        <h1 className="text-2xl font-bold text-white mb-4">{problem.problemName}</h1>
-        <p className="text-lg"><strong className="text-gray-400">Difficulty:</strong> <span className={difficultyColor}>{problem.difficulty}</span></p>
-        <p className="text-lg"><strong className="text-gray-400">Topic:</strong> {problem.topic}</p>
-        <p className="mt-4 text-gray-300 w-full"><strong>Description:</strong> {problem.description}</p>
-        <p className="mt-4 text-gray-400 font-semibold">Constraints:</p>
-        <ul className="list-disc list-inside text-gray-300">
-          {problem.constraints?.map((constraint, index) => (
-            <li key={index}>{constraint}</li>
-          ))}
-        </ul>
-        <a 
-          href={problem.url} 
-          target="_blank" 
-          rel="noopener noreferrer" 
-          className="block mt-4 text-blue-400 hover:underline"
-        >View on LeetCode</a>
-          <div className="w-full px-4 py-6 bg-gray-900 shadow-lg rounded-lg mt-6 text-white">
-            <h2 className="text-2xl font-bold text-white mb-4">Submit your code!</h2>
-            <CodeEditor />
-          </div>
+        <h2 className="text-2xl font-bold text-white mb-4">Submit your code!</h2>
+        <CodeEditor />
       </div>
-    </>
+    </div>
   );
 };
 
