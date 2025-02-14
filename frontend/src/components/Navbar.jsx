@@ -4,13 +4,12 @@ import { CiLight } from "react-icons/ci";
 import { Link, useNavigate } from 'react-router-dom';
 import { RocketIcon } from './RocketIcon';
 
-function Navbar(props) {
+function Navbar({ isLoggedIn, setIsLoggedIn }) {
   const navigate = useNavigate();
   const userId = localStorage.getItem("userSession"); // Check for user session
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-
   // Update isLoggedIn state when userId changes
   useEffect(() => {
+    console.log('userid : ', userId);
     if (userId) {
       setIsLoggedIn(true);
     } else {

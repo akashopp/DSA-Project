@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { toast } from "react-toastify";
 import 'react-toastify/dist/ReactToastify.css'; 
 
@@ -51,9 +51,7 @@ function Problems() {
           navigate("/register");
         }
       });
-    } else {
-      console.log("User ID:", userId);
-    }
+    } 
   }, [userId, navigate]);
 
   // Fetch problems from the API
@@ -199,14 +197,12 @@ function Problems() {
                       </td>
                       <td className="p-3">
                         {/* Make the problemName a clickable link */}
-                        <a
-                          href={item.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
+                        <Link 
+                          to={`/problem/${item._id}`} 
                           className="text-blue-400 hover:underline"
                         >
                           {item.problemName}
-                        </a>
+                        </Link>
                       </td>
                       <td className="p-3">
                         <span

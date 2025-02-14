@@ -8,10 +8,20 @@ router.get('/', async (req, res) => {
     console.log(req.session);
     console.log(req.session.id);
     const problems = await Problem.find({});
-    res.json(problems);
+    return res.status(200).json(problems);
   } catch (error) {
-    res.status(500).json({ message: 'Error retrieving problems' });
+    return res.status(500).json({ message: 'Error retrieving problems' });
   }
 });
+
+router.get('/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const problem = await Problem.findOne({ _id: id });
+    return res.status(200).json(problem);
+  } catch (error) {
+    return res.status(500).json({ message: 'Error getting problem' });
+  }
+})
 
 export default router;

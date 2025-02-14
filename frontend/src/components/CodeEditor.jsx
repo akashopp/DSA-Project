@@ -11,8 +11,6 @@ import { monokai } from "@uiw/codemirror-theme-monokai";
 import { githubLight, githubDark } from "@uiw/codemirror-theme-github";
 import { Moon, Sun, Code2, Play, Terminal } from "lucide-react";
 import { EditorState } from "@uiw/react-codemirror";
-import { autocompletion } from "@codemirror/autocomplete";
-import { closeBrackets } from "@codemirror/autocomplete";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 
@@ -80,8 +78,6 @@ public class Solution {
             navigate("/register");
           }
         });
-      } else {
-        console.log("User ID:", userId);
       }
     }, [userId, navigate]);
 

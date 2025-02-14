@@ -1,5 +1,5 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import Navbar from "./components/Navbar";
 import Courses from "./pages/Courses";
 import Lessons from "./pages/Lessons";
@@ -10,26 +10,31 @@ import Submit from "./pages/Submit";
 import Register from "./pages/Register";
 import Login from "./pages/Login";
 import { ToastContainer } from 'react-toastify';
-
-// Function to validate the session
-const validateSession = async () => {
-  try {
-    const response = await fetch('http://localhost:5000/', {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      credentials: "include", // Include credentials (cookies, auth tokens, etc.)
-    });
-    const data = await response.json();
-    console.log("Session validated: ", data);
-  } catch (err) {
-    console.log('Error validating session: ', err);
-  }
-};
+import Problem from "./components/Problem";
 
 function App() {
   // Call validateSession when the component mounts
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  // Function to validate the session
+  const validateSession = async () => {
+    try {
+      const response = await fetch('http://localhost:5000/', {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include", // Include credentials (cookies, auth tokens, etc.)
+      });
+      const data = await response.json();
+      console.log("Session validated: ", data);
+    } catch (err) {
+      console.error('Error validating session: ', err);
+      localStorage.removeItem("userSession");
+      setIsLoggedIn(false);
+    }
+  };
+
   useEffect(() => {
     validateSession();
   }, []);
@@ -37,7 +42,7 @@ function App() {
   return (
     <>
       <Router>
-        <Navbar userId /> {/* If userId is dynamic, you can pass it accordingly */}
+        <Navbar isLoggedIn={isLoggedIn} setIsLoggedIn={setIsLoggedIn} /> {/* If userId is dynamic, you can pass it accordingly */}
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/courses" element={<Courses />} />
@@ -47,6 +52,7 @@ function App() {
           <Route path="/submit" element={<Submit />} />
           <Route path="/register" element={<Register />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/problem/:problemId" element={<Problem />} />
         </Routes>
       </Router>
       <div><ToastContainer></ToastContainer></div>
