@@ -2,35 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { toast } from "react-toastify";
 import 'react-toastify/dist/ReactToastify.css'; 
-
-// ProblemManager class to handle grouping and sorting by difficulty
-class ProblemManager {
-  static groupByTopic(problems) {
-    const grouped = {};
-
-    // Define difficulty levels for sorting
-    const difficultyOrder = {
-      'Easy': 0,
-      'Medium': 1,
-      'Hard': 2,
-    };
-
-    // Group problems by their topic name and sort by difficulty
-    problems.forEach((problem) => {
-      if (!grouped[problem.topic]) {
-        grouped[problem.topic] = [];
-      }
-      grouped[problem.topic].push(problem);
-    });
-
-    // Sort problems within each topic based on difficulty
-    Object.keys(grouped).forEach((topic) => {
-      grouped[topic].sort((a, b) => difficultyOrder[a.difficulty] - difficultyOrder[b.difficulty]);
-    });
-
-    return grouped;
-  }
-}
+import { fetchProblems, fetchUserProblems, ProblemManager } from '../utils';
 
 function Problems() {
   const [isExpanded, setIsExpanded] = useState({}); // Track expanded/collapsed state for each topic
@@ -54,50 +26,20 @@ function Problems() {
     } 
   }, [userId, navigate]);
 
-  // Fetch problems from the API
-  const fetchProblems = async () => {
-    try {
-      const response = await fetch('http://localhost:5000/problems', {
-        method: "GET", 
-        credentials: "include",
-      });
-      if (response.ok) {
-        const data = await response.json();
-        setProblems(data); // Update the problems state with the fetched data
+  const fetchData = async () => {
+    const data = await fetchProblems();
+    setProblems(data); // Update the problems state with the fetched data
+    // Group problems by topic using ProblemManager
+    const grouped = ProblemManager.groupByTopic(data);
+    setGroupedProblems(grouped);
 
-        // Group problems by topic using ProblemManager
-        const grouped = ProblemManager.groupByTopic(data);
-        setGroupedProblems(grouped);
-      } else {
-        console.error('Failed to fetch problems');
-      }
-    } catch (error) {
-      console.error('Error fetching problems:', error);
-    }
-  };
-
-  // Fetch user problems
-  const fetchUserProblems = async () => {
-    try {
-      const response = await fetch(`http://localhost:5000/user/getproblems/${userId}`, {
-        method: "GET", 
-        credentials: "include",
-      });
-      if (response.ok) {
-        const userData = await response.json();
-        setUserProblems(userData.problems); // Set the user's problemId list
-      } else {
-        console.error('Failed to fetch user data');
-      }
-    } catch (error) {
-      console.error('Error fetching user data:', error);
-    }
-  };
+    const userData = await fetchUserProblems(userId);
+    setUserProblems(userData.problems); // Set the user's problemId list
+  }
 
   // Fetch problems and user problems when the component mounts
   useEffect(() => {
-    fetchProblems();
-    fetchUserProblems();
+    fetchData();
   }, []); // Empty dependency array means this effect runs once when the component mounts
 
   // Toggle the expanded/collapsed state of a particular topic
@@ -133,8 +75,7 @@ function Problems() {
 
       if (response.ok) {
         // After the problem status is updated, reload the problems and user problems
-        fetchProblems(); // Fetch updated problems
-        fetchUserProblems(); // Fetch updated user problems list
+        fetchData();
       } else {
         console.error('Failed to update user problem list');
         toast.warn("You are not logged in. Please register.", {
