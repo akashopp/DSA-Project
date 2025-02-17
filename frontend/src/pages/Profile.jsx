@@ -11,7 +11,18 @@ const Profile = () => {
   const [groupedUserSolvedProblems, setGroupedUserSolvedProblems] = useState({});
   const navigate = useNavigate();
 
-  const userId = localStorage.getItem('userSession');
+  const userId = localStorage.getItem('userSession'); // Get user ID from localStorage
+
+  // Redirect if user is not logged in
+  useEffect(() => {
+    if (!userId) {
+      toast.warn('You are not logged in. Please log in to access your profile.', {
+        position: 'top-center',
+        autoClose: 5000,
+        onClose: () => navigate('/login'), // Redirect to login page
+      });
+    }
+  }, [userId, navigate]);
 
   useEffect(() => {
     if (userId) {
@@ -31,9 +42,6 @@ const Profile = () => {
       };
 
       fetchUserData();
-    } else {
-      setError('No user session found');
-      setLoading(false);
     }
   }, [userId]);
 
@@ -55,6 +63,9 @@ const Profile = () => {
 
     if (userId) fetchData();
   }, [userId]);
+
+  // Prevent rendering profile content if userId is null
+  if (!userId) return null;
 
   if (loading) {
     return (
@@ -112,16 +123,6 @@ const Profile = () => {
           </div>
         ))}
       </div>
-
-      {/* Edit profile route */}
-      {/* <div className="mt-6 flex justify-center">
-        <button
-          className="bg-green-500 font-bold p-2 rounded-xl hover:bg-green-700"
-          onClick={() => navigate('/edit-profile')}
-        >
-          Edit Profile
-        </button>
-      </div> */}
     </div>
   );
 };

@@ -81,17 +81,19 @@ function Navbar({ isLoggedIn, setIsLoggedIn }) {
 
         {/* Right section */}
         <div className="flex items-center space-x-4">
-          {/* Profile section */}
-          <Link to="/profile" className="hover:text-gray-300 transition-colors text-white font-extrabold">
-            <User className="h-6 w-6" />
-          </Link>
           {isLoggedIn ? (
-            <button
-              onClick={handleLogout}
-              className="bg-red-600 hover:bg-red-500 px-4 py-1.5 rounded-md transition-colors"
-            >
-              Logout
-            </button>
+            <div className="flex items-center space-x-4">
+              {/* Profile section */}
+              <Link to="/profile" className="hover:text-gray-300 transition-colors text-white font-extrabold">
+                <User className="h-6 w-6" />
+              </Link>
+              <button
+                onClick={handleLogout}
+                className="bg-red-600 hover:bg-red-500 px-4 py-1.5 rounded-md transition-colors"
+              >
+                Logout
+              </button>
+            </div>
           ) : (
             <Link 
               to="/register" 
