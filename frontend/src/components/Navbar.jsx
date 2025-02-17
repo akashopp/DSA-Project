@@ -3,6 +3,7 @@ import logo from "../assets/logo.png";
 import { CiLight } from "react-icons/ci";
 import { Link, useNavigate } from 'react-router-dom';
 import { RocketIcon } from './RocketIcon';
+import { User } from 'lucide-react';
 
 function Navbar({ isLoggedIn, setIsLoggedIn }) {
   const navigate = useNavigate();
@@ -80,6 +81,10 @@ function Navbar({ isLoggedIn, setIsLoggedIn }) {
 
         {/* Right section */}
         <div className="flex items-center space-x-4">
+          {/* Profile section */}
+          <Link to="/profile" className="hover:text-gray-300 transition-colors text-white font-extrabold">
+            <User className="h-6 w-6" />
+          </Link>
           {isLoggedIn ? (
             <button
               onClick={handleLogout}

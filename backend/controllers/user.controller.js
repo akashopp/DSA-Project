@@ -41,8 +41,9 @@ export const CreateUser = async (req, res) => {
 // Get all users
 export const getUser = async (req, res) => {
   try {
-    const items = await User.find();
-    return res.status(200).json({ items });
+    const { id } = req.params;
+    const user = await User.findOne({ _id: id }).select("-password");
+    return res.status(200).json(user);
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Internal server error" });

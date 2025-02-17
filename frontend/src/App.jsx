@@ -12,6 +12,7 @@ import Login from "./pages/Login";
 import { ToastContainer } from 'react-toastify';
 import Problem from "./components/Problem";
 import Recommendation from "./pages/Recommendation";
+import Profile from "./pages/Profile";
 
 function App() {
   // Call validateSession when the component mounts
@@ -55,6 +56,7 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/problem/:problemId" element={<Problem />} />
           <Route path="/recommendation" element={<Recommendation />} />
+          <Route path="/profile" element={<Profile />} />
         </Routes>
       </Router>
       <div><ToastContainer></ToastContainer></div>

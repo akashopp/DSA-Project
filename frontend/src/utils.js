@@ -1,29 +1,36 @@
 // ProblemManager class to handle grouping and sorting by difficulty
 export class ProblemManager {
-    static groupByTopic(problems) {
-      const grouped = {};
-      // Define difficulty levels for sorting
-      const difficultyOrder = {
-        'Easy': 0,
-        'Medium': 1,
-        'Hard': 2,
-      };
-  
-      // Group problems by their topic name and sort by difficulty
-      problems.forEach((problem) => {
-        if (!grouped[problem.topic]) {
-          grouped[problem.topic] = [];
-        }
+  static groupByTopic(problems) {
+    const grouped = {};
+    
+    // Define difficulty levels for sorting
+    const difficultyOrder = {
+      'Easy': 0,
+      'Medium': 1,
+      'Hard': 2,
+    };
+
+    const topicOrder = ["Arrays", "Stack/Queue", "Two Pointers", "Hashing", "Binary Search", "Dynamic Programming", "Trees", "Graphs"];
+
+    // Initialize grouped object with empty arrays in the correct order
+    topicOrder.forEach(topic => {
+      grouped[topic] = [];
+    });
+
+    // Group problems by their topic name
+    problems.forEach((problem) => {
+      if (grouped.hasOwnProperty(problem.topic)) {
         grouped[problem.topic].push(problem);
-      });
-  
-      // Sort problems within each topic based on difficulty
-      Object.keys(grouped).forEach((topic) => {
-        grouped[topic].sort((a, b) => difficultyOrder[a.difficulty] - difficultyOrder[b.difficulty]);
-      });
-  
-      return grouped;
-    }
+      }
+    });
+
+    // Sort problems within each topic based on difficulty
+    topicOrder.forEach((topic) => {
+      grouped[topic].sort((a, b) => difficultyOrder[a.difficulty] - difficultyOrder[b.difficulty]);
+    });
+
+    return grouped;
+  }
 }
 
 // Fetch problems from the API

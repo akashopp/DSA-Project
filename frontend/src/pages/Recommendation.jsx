@@ -61,7 +61,7 @@ const Recommendation = () => {
 
     // Function to compute the recommended problem
     const computeRecommendation = (grouped, groupedUserSolved) => {
-        const topicOrder = ["Arrays", "Stack/Queue", "Hashing", "Dynamic Programming", "Trees", "Graphs"];
+        const topicOrder = ["Arrays", "Stack/Queue", "Two Pointers", "Hashing", "Binary Search", "Dynamic Programming", "Trees", "Graphs"];
 
         // Step 1: Compute ratio for each topic
         const topicRatios = Object.keys(grouped).map(topic => {

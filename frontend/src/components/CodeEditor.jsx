@@ -13,6 +13,7 @@ import { Moon, Sun, Code2, Play, Terminal } from "lucide-react";
 import { EditorState } from "@uiw/react-codemirror";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
+import { debounce } from 'lodash';
 
 // Error Boundary Component to catch errors in the app
 
@@ -131,10 +132,20 @@ public class Solution {
   
 
   useEffect(() => {
-    if (problemName) {
-      fetchTestCases();
-    }
-  }, [problemName]);
+    const debouncedFetch = debounce(() => {
+      if (problemName) {
+        fetchTestCases();
+      }
+    }, 500); // 500ms delay
+
+    // Call the debounced function
+    debouncedFetch();
+
+    // Cleanup function to cancel the debounced function if the component unmounts or problemName changes
+    return () => {
+      debouncedFetch.cancel();
+    };
+  }, [problemName]); // Dependency on problemName
 
   // Handle running code with the given input (for the "Run" button)
   const handleRunCode = async () => {

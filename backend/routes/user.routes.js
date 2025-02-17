@@ -6,7 +6,7 @@ import { CreateUser, getUser, getUserSolved, AddProblem, DeleteProblem, findUser
 const router = express.Router();
 
 router.route("/register").post(CreateUser);
-router.route("/getuser").get(getUser);
+router.route("/getuser/:id").get(getUser);
 router.route("/getproblems/:id").get(getUserSolved)
 router.route("/addproblem").put(AddProblem)
 router.route("/deleteproblem").put(DeleteProblem)
