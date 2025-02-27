@@ -53,6 +53,7 @@ export const fetchProblems = async () => {
 
 // Fetch user problems
 export const fetchUserProblems = async (userId) => {
+    if(!userId) return;
     try {
       const response = await fetch(`http://localhost:5000/user/getproblems/${userId}`, {
         method: "GET", 
