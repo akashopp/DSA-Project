@@ -296,6 +296,7 @@ public class Solution {
   
       if (!compileResponse.ok) {
         const errorBody = await compileResponse.json();
+        passedAll = false;
         throw new Error(errorBody.output || "Compilation failed with no details.");
       }
   
@@ -322,6 +323,7 @@ public class Solution {
   
           if (!response.ok) {
             const responseBody = await response.json();
+            passedAll = false;
             throw new Error(responseBody.output || "No output provided.");
           }
   
@@ -346,6 +348,7 @@ public class Solution {
             status: isCompileError ? "Compile Error" : "Runtime Error",
             runtime: 'NA'
           };
+          passedAll = false;
         }
         setTestResults([...results]); // Update test results after each test case
       }
@@ -505,19 +508,21 @@ public class Solution {
               )}
               {loading ? "Running..." : "Run"}
             </button>
-            <button
-              onClick={handleSubmit}
-              className="flex-1 py-3 px-4 bg-green-500 hover:bg-green-600 text-white rounded-md font-semibold flex items-center justify-center"
-              disabled={loading}
-            >
-              {compiling ? (
-                <>
-                  <div className="w-6 h-6 border-4 border-white border-t-transparent border-solid rounded-full animate-spin mr-2"></div> Compiling...
-                </>
-              ) : (
-                "Submit"
-              )}
-            </button>
+            {!location.pathname.endsWith('/playground') && (
+              <button
+                onClick={handleSubmit}
+                className="flex-1 py-3 px-4 bg-green-500 hover:bg-green-600 text-white rounded-md font-semibold flex items-center justify-center"
+                disabled={loading}
+              >
+                {compiling ? (
+                  <>
+                    <div className="w-6 h-6 border-4 border-white border-t-transparent border-solid rounded-full animate-spin mr-2"></div> Compiling...
+                  </>
+                ) : (
+                  "Submit"
+                )}
+              </button>
+            )}
           </div>
 
 
