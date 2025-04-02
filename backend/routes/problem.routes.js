@@ -22,6 +22,6 @@ router.get('/:id', async (req, res) => {
   } catch (error) {
     return res.status(500).json({ message: 'Error getting problem' });
   }
-})
+});
 
 export default router;

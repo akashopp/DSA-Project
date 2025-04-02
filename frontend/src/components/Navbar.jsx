@@ -59,9 +59,9 @@ function Navbar({ isLoggedIn, setIsLoggedIn }) {
 
           {/* Navigation links */}
           <div className="flex items-center space-x-6">
-            <Link to="/courses" className="hover:text-gray-300 transition-colors text-white font-extrabold">
+            {/* <Link to="/courses" className="hover:text-gray-300 transition-colors text-white font-extrabold">
               Courses
-            </Link>
+            </Link> */}
             <Link to="/practice" className="hover:text-gray-300 transition-colors text-white font-extrabold">
               Practice
             </Link>

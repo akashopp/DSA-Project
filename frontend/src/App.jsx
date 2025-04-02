@@ -47,7 +47,7 @@ function App() {
         <Navbar isLoggedIn={isLoggedIn} setIsLoggedIn={setIsLoggedIn} /> {/* If userId is dynamic, you can pass it accordingly */}
         <Routes>
           <Route path="/" element={<Home />} />
-          <Route path="/courses" element={<Courses />} />
+          {/* <Route path="/courses" element={<Courses />} /> */}
           <Route path="/lessons" element={<Lessons />} />
           <Route path="/practice" element={<Practice />} />
           <Route path="/roadmap" element={<Roadmap />} />

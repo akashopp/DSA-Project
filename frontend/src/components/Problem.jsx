@@ -65,7 +65,7 @@ const Problem = () => {
       {/* Code Submission Section */}
       <div className="w-full px-4 py-6 bg-gray-900 shadow-lg rounded-lg mt-6 text-white">
         <h2 className="text-2xl font-bold text-white mb-4">Submit your code!</h2>
-        <CodeEditor />
+        <CodeEditor problem_name = {problem.problemName}/>
       </div>
     </div>
   );

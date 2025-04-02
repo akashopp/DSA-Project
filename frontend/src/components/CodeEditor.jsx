@@ -14,10 +14,11 @@ import { EditorState } from "@uiw/react-codemirror";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 import { debounce } from 'lodash';
+import { useLocation } from "react-router-dom";
 
 // Error Boundary Component to catch errors in the app
 
-const CodeEditor = () => {
+const CodeEditor = ({ problem_name = ''}) => {
   const [code, setCode] = useState("// Write your code here");
   const [output, setOutput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -27,12 +28,14 @@ const CodeEditor = () => {
   const [isDarkMode, setIsDarkMode] = useState(true);
   const [selectedTheme, setSelectedTheme] = useState("oneDark");
   const [fontSize, setFontSize] = useState(14); // Default font size
-  const [problemName, setProblemName] = useState(""); // Problem name input
+  const [problemName, setProblemName] = useState(problem_name); // Problem name input
   const [testCases, setTestCases] = useState([]);
   const [testResults, setTestResults] = useState([]);
   const [compiling, setCompiling] = useState(false);
   const navigate = useNavigate();
-  const userId = localStorage.getItem("userSession")
+  const userId = localStorage.getItem("userSession");
+  const location = useLocation();
+  const problemId = location.pathname.split('/')[2] || null;
   // Example templates for code
   const templates = {
     cpp: `#include <bits/stdc++.h>
@@ -279,7 +282,7 @@ public class Solution {
     }));
   
     setTestResults(results);
-  
+    let passedAll = true;
     try {
       // Compilation step
       const compileResponse = await fetch("http://localhost:5000/runcode/compile", {
@@ -324,7 +327,7 @@ public class Solution {
   
           const result = await response.json();
           const isPass = result.status === "Passed";
-  
+          if(!isPass) passedAll = false;
           results[i] = {
             output: result.output,
             status: isPass ? "Passed" : "Failed",
@@ -368,6 +371,29 @@ public class Solution {
         if (!deleteResponse.ok) {
           console.error("Error cleaning up compiled file:", deleteResponse.statusText);
         }
+        if(passedAll) {
+          try {
+            const response = await fetch(`http://localhost:5000/user/addproblem`, {
+              method: 'PUT',
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                userId, // The current user's ID
+                problemId, // The ID of the problem being toggled
+              }),
+              credentials: "include"
+            });
+            console.log('response : ', await response.json());
+          } catch (error) {
+            console.error('error updating user status : ', error);
+          }
+          toast.success(`Congrats, You have solved all testcases for ${problemName}!`, {
+            position: 'top-center',
+            autoClose: 5000
+          });
+          // add problem to user's solved!
+        }
       } catch (err) {
         console.log("Error cleaning up compiled file:", err.message);
       }
@@ -398,27 +424,27 @@ public class Solution {
     <div className={`min-h-screen transition-colors duration-200 ${isDarkMode ? "bg-gray-900 text-gray-200" : "bg-gray-50 text-gray-800"}`}>
       <div className="container mx-auto px-4 py-8">
         <div className={`rounded-xl shadow-2xl p-6 ${isDarkMode ? "bg-gray-800" : "bg-white"}`}>
-          <div className="flex items-center justify-between mb-8">
-            <div className="flex items-center gap-2">
-              <Code2 className="w-8 h-8 text-blue-500" />
-              <h1 className="text-3xl font-bold">Code Runner</h1>
+          { location.pathname.endsWith('/playground') && (
+            <div className="flex items-center justify-between mb-8">
+              <div className="flex items-center gap-2">
+                <Code2 className="w-8 h-8 text-blue-500" />
+                <h1 className="text-3xl font-bold">Code Runner</h1>
+              </div>
             </div>
-            <div className="flex items-center gap-4">
-              <button onClick={toggleTheme} className="p-2 rounded-full hover:bg-gray-700/20">
-                {isDarkMode ? <Sun className="w-6 h-6" /> : <Moon className="w-6 h-6" />}
-              </button>
-            </div>
-          </div>
+          )}
 
-          <div className="mb-6">
-            <input
-              type="text"
-              placeholder="Enter Problem Name"
-              value={problemName}
-              onChange={(e) => setProblemName(e.target.value)}
-              className={`w-full p-4 rounded-lg ${isDarkMode ? "bg-gray-700 text-gray-200" : "bg-gray-200 text-gray-800"}`}
-            />
-          </div>
+          {!location.pathname.endsWith('/playground') && (
+            <div className="mb-6">
+              <input
+                type="text"
+                value={problem_name} // Set a fixed value
+                readOnly // Make it uneditable
+                className={`w-full p-4 rounded-lg ${
+                  isDarkMode ? "bg-gray-700 text-gray-200" : "bg-gray-200 text-gray-800"
+                }`}
+              />
+            </div>
+          )}
 
           <div className="flex gap-4">
             <select

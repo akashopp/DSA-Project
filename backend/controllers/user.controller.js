@@ -1,6 +1,5 @@
 import { User } from "../models/user.model.js";
 import mongoose from "mongoose";
-import session from "express-session";
 
 // Create a new user
 export const CreateUser = async (req, res) => {

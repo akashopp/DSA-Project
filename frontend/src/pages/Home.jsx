@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react'
 import { Outlet, useNavigate } from 'react-router-dom';
+import Recommendation from './Recommendation';
 
 function Home(props) {
     useEffect(() => {
@@ -15,13 +16,13 @@ function Home(props) {
           Data Structures &
           <br></br> Algorithms
 
-          <div className='text-lg font-light'>Follow a structured path to learn all of the core data structures & algorithms. Perfect for coding preparation.</div>
+          <div className='text-lg font-light mt-2'>Follow a structured path to learn all of the core data structures & algorithms. Perfect for coding preparation.</div>
         </div>
 
         <div className="flex justify-evenly items-center h-5/6 mt-24">
 
 
-          <div className='border-4 h-[21rem] w-1/3 p-3 duration-500 ease-in-out rounded-2xl hover:scale-110 hover:translate-y-4'>
+          <div className='border-4 h-auto w-1/3 p-3 duration-500 ease-in-out rounded-2xl hover:scale-110 hover:translate-y-4'>
 
             <img src="https://imagedelivery.net/CLfkmk9Wzy8_9HRyug4EVA/a65736b6-151f-4572-8e10-87b2b75ab100/public" alt="" className='rounded-2xl' />
 
@@ -37,7 +38,7 @@ function Home(props) {
 
           </div>          
 
-          <div className='border-4 h-[21rem] w-1/3 p-3 duration-500 ease-in-out rounded-2xl hover:scale-110 hover:translate-y-4'>
+          <div className='border-4 h-auto w-1/3 p-3 duration-500 ease-in-out rounded-2xl hover:scale-110 hover:translate-y-4'>
 
             <img src="https://imagedelivery.net/CLfkmk9Wzy8_9HRyug4EVA/dd1abac9-220d-4c4d-a8c5-d755e2606800/public" alt="" className='rounded-2xl'/>
 
@@ -56,8 +57,6 @@ function Home(props) {
 
 
         </div>
-
-
 
       </div>
     </>
