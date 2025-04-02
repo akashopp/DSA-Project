@@ -50,7 +50,7 @@ function Navbar({ isLoggedIn, setIsLoggedIn }) {
 
   return (
     <>
-      <div className='flex justify-between bg-[#404040] p-2'>
+      <div className="flex justify-between bg-[#404040] p-2 relative">
         <div className="flex items-center space-x-8">
           {/* Logo and brand */}
           <Link to="/" className="flex items-center space-x-2">
@@ -59,23 +59,22 @@ function Navbar({ isLoggedIn, setIsLoggedIn }) {
 
           {/* Navigation links */}
           <div className="flex items-center space-x-6">
-            {/* <Link to="/courses" className="hover:text-gray-300 transition-colors text-white font-extrabold">
-              Courses
-            </Link> */}
             <Link to="/practice" className="hover:text-gray-300 transition-colors text-white font-extrabold">
               Practice
             </Link>
             <Link to="/playground" className="hover:text-gray-300 transition-colors text-white font-extrabold">
               Playground
             </Link>
-            { userId != null && ( <Link to="/recommendation" className="hover:text-gray-300 transition-colors text-white font-extrabold">
-              Recommendation
-            </Link> )}
+            {userId != null && (
+              <Link to="/recommendation" className="hover:text-gray-300 transition-colors text-white font-extrabold">
+                Recommendation
+              </Link>
+            )}
           </div>
         </div>
 
-        {/* Middle section */}
-        <div className='text-white font-extrabold text-4xl mr-40'>
+        {/* Middle section - Centered */}
+        <div className="absolute left-1/2 transform -translate-x-1/2 text-white font-extrabold text-4xl">
           LearnDSA
         </div>
 
@@ -95,8 +94,8 @@ function Navbar({ isLoggedIn, setIsLoggedIn }) {
               </button>
             </div>
           ) : (
-            <Link 
-              to="/register" 
+            <Link
+              to="/register"
               className="bg-blue-600 hover:bg-blue-500 px-4 py-1.5 rounded-md transition-colors"
             >
               Sign in
