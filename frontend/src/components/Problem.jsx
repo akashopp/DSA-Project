@@ -32,6 +32,7 @@ const Problem = () => {
 
   return (
     <div className="w-full px-4 py-6 bg-gray-900 shadow-lg rounded-lg mt-6 text-white">
+      <div className='mx-8 mt-2'>
       <h1 className="text-2xl font-bold text-white mb-4">{problem.problemName}</h1>
       <p className="text-lg"><strong className="text-gray-400">Difficulty:</strong> <span className={difficultyColor}>{problem.difficulty}</span></p>
       <p className="text-lg"><strong className="text-gray-400">Topic:</strong> {problem.topic}</p>
@@ -66,6 +67,7 @@ const Problem = () => {
       <div className="w-full px-4 py-6 bg-gray-900 shadow-lg rounded-lg mt-6 text-white">
         <h2 className="text-2xl font-bold text-white mb-4">Submit your code!</h2>
         <CodeEditor problem_name = {problem.problemName}/>
+      </div>
       </div>
     </div>
   );
