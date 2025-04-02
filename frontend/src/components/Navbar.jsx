@@ -68,9 +68,9 @@ function Navbar({ isLoggedIn, setIsLoggedIn }) {
             <Link to="/playground" className="hover:text-gray-300 transition-colors text-white font-extrabold">
               Playground
             </Link>
-            <Link to="/recommendation" className="hover:text-gray-300 transition-colors text-white font-extrabold">
+            { userId != null && ( <Link to="/recommendation" className="hover:text-gray-300 transition-colors text-white font-extrabold">
               Recommendation
-            </Link>
+            </Link> )}
           </div>
         </div>
 
