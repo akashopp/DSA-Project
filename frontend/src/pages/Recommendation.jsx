@@ -128,7 +128,7 @@ const Recommendation = () => {
                             <p className="text-gray-300">{topic}: {solved}/{total} solved</p>
                             <div className="w-full bg-gray-700 rounded-full h-3">
                                 <div 
-                                    className="bg-green-500 h-3 rounded-full" 
+                                    className="bg-green-500 h-3 rounded-full transition-[width] duration-700 ease-in-out"
                                     style={{ width: `${percentage}%` }}
                                 ></div>
                             </div>

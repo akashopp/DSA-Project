@@ -83,12 +83,20 @@ const Profile = () => {
     );
   }
 
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-screen bg-gray-900">
+        <span className="text-xl text-white animate-pulse">Loading...</span>
+      </div>
+    );
+  }  
+  let grand_total = 0;
   // Progress computation logic
   const progressByTopic = Object.keys(groupedProblems).map((topic) => {
     const total = groupedProblems[topic]?.length || 0;
     const solved = groupedUserSolvedProblems[topic]?.length || 0;
     const percentage = (solved / total) * 100;
-
+    grand_total += solved;
     return { topic, solved, total, percentage };
   });
 
@@ -116,12 +124,15 @@ const Profile = () => {
             </p>
             <div className="w-full bg-gray-700 rounded-full h-3">
               <div
-                className="bg-green-500 h-3 rounded-full"
+                className="bg-green-500 h-3 rounded-full transition-[width] duration-700 ease-in-out"
                 style={{ width: `${percentage}%` }}
               ></div>
             </div>
           </div>
         ))}
+        <div className='text-center text-2xl text-gray-300'>
+          Total solved : {grand_total}
+        </div>
       </div>
     </div>
   );
