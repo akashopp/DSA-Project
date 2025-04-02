@@ -1,198 +1,91 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
-import { useNavigate } from "react-router-dom";
-// import Navbar from "./Navbar";
-// import Footer from "./Footer";
+import { Link, useNavigate } from "react-router-dom";
 
 const Register = () => {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
-  const [phoneNumber, setphoneNumber] = useState(0);
+  const [phoneNumber, setPhoneNumber] = useState("");
   const [password, setPassword] = useState("");
-  const [userId, setuserId] = useState("");
+  const [userId, setUserId] = useState("");
 
   const navigate = useNavigate();
 
-
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
     const addUser = { name, userId, email, phoneNumber, password };
-    console.log(addUser)
+    console.log(addUser);
 
     const response = await fetch("http://localhost:5000/user/register", {
       method: "POST",
       body: JSON.stringify(addUser),
       headers: {
-        "Content-Type": "application/json"
+        "Content-Type": "application/json",
       },
       credentials: "include",
-    })
-    
+    });
+
     const result = await response.json();
-    
+
     if (!response.ok) {
-      if(result.message == "User aldready exist") {
-        alert("User Aldready exists");
+      if (result.message === "User already exists") {
+        alert("User Already Exists");
       }
-    }
-    
-    if (response.ok) {
-      
+    } else {
       console.log(result);
       setName("");
       setEmail("");
-      setphoneNumber("");
+      setPhoneNumber("");
       setPassword("");
-      setuserId("");
+      setUserId("");
 
       alert("Registered Successfully");
-        navigate("/login");
-
+      navigate("/login");
     }
   };
 
-
   return (
-    <>
-        <form 
-        // onSubmit={handleSubmit}
+    <div className="flex items-center justify-center min-h-screen">
+      <form 
+        onSubmit={handleSubmit} 
+        className="bg-gray-800 bg-opacity-75 shadow-xl rounded-2xl p-8 w-full max-w-lg border border-gray-100"
+      >
+        <h2 className="text-2xl font-semibold text-white text-center mb-6">Register</h2>
+        <div className="space-y-4">
+          {[
+            { label: "Name", value: name, setValue: setName, type: "text" },
+            { label: "User ID", value: userId, setValue: setUserId, type: "text" },
+            { label: "Email", value: email, setValue: setEmail, type: "email" },
+            { label: "Password", value: password, setValue: setPassword, type: "password" },
+            { label: "Phone Number", value: phoneNumber, setValue: setPhoneNumber, type: "text" },
+          ].map(({ label, value, setValue, type }) => (
+            <div key={label}>
+              <label className="block text-white text-lg mb-1">{label}</label>
+              <input
+                type={type}
+                value={value}
+                onChange={(e) => setValue(e.target.value)}
+                className="w-full px-4 py-2 text-gray-900 bg-white rounded-lg shadow focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all"
+                placeholder={`Enter your ${label.toLowerCase()}`}
+                required
+              />
+            </div>
+          ))}
+        </div>
+
+        <button
+          type="submit"
+          className="w-full mt-6 bg-blue-500 text-white py-2 px-4 rounded-lg shadow-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-300 transition-all"
         >
-        <div className="mx-96 border-white border-2 p-4 my-3">
+          Register
+        </button>
 
-
-          <div className="mb-4">
-            <label htmlFor="name" className="block text-white text-xl">
-              Name
-            </label>
-            <input
-              type="text"
-              id="name"
-              value={name}
-              onChange={(e) =>
-                
-                setName(
-                  e.target.value  
-                )
-
-              }
-              className="text-black text-xl w-full px-3 py-2 mt-1 border rounded focus:outline-none focus:ring focus:border-blue-300"
-              placeholder="Enter your name"
-              required
-            />
-            </div>
-
-            <div className="mb-4">
-            <label htmlFor="name" className="block text-white text-xl">
-              User Id
-            </label>
-            <input
-              type="text"
-              id="userId"
-              value={userId}
-              onChange={(e) =>
-                
-                setuserId(
-                  e.target.value  
-                )
-
-              }
-              className="text-black text-xl w-full px-3 py-2 mt-1 border rounded focus:outline-none focus:ring focus:border-blue-300"
-              placeholder="Enter User Id"
-              required
-            />
-            </div>
-
-
-      <div className="mb-4">
-            <label htmlFor="email" className="block text-white text-xl">
-              Email
-            </label>
-            <input
-              type="email"
-              id="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-3 py-2 mt-1 border rounded focus:outline-none focus:ring text-black text-xl"
-              placeholder="Enter your email"
-              required
-            />
-          </div>
-
-
-          <div className="mb-4">
-            <label htmlFor="password" className="block text-white text-xl">
-              Password
-            </label>
-            <input
-              type="password"
-              id="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-3 py-2 mt-1 border rounded focus:outline-none focus:ring text-black text-xl"
-              placeholder="Enter your password"
-              required
-            />
-          </div>
-
-
-          <div className="mb-4">
-            <label htmlFor="phoneNumber" className="block text-white text-xl">
-              Phone number
-            </label>
-            <input
-              type="text"
-              id="phoneNumber"
-              value={phoneNumber}
-              onChange={(e) => setphoneNumber(e.target.value)}
-              className="w-full px-3 py-2 mt-1 border rounded focus:outline-none focus:ring text-black text-xl"
-              placeholder="Enter your phone number"
-              required
-            />
-          </div>
-
-        <div className="flex justify-center items-center bg-[rgb(57, 57, 57)]">
-      <div className=" bg-[rgb(57, 57, 57)] rounded shadow-md text-white">
-        {/* <h2 className="text-2xl font-bold mb-6 text-center">Register</h2> */}
-
-        <div className="mb-3 text-center">
-          <Link to="/login" className="text-blue-500 hover:underline">
+        <div className="mt-4 text-center">
+          <Link to="/login" className="text-blue-400 hover:underline">
             Already have an account? Login
           </Link>
         </div>
-      </div>
+      </form>
     </div>
-
-          <button
-            type="submit"
-            className="w-full bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 focus:outline-none focus:bg-blue-700"
-            onClick={handleSubmit}
-          >
-            Register
-          </button>
-        </div>
-          {/* </div> */}
-{/* 
-          
-
-          
-
-          
-
-
-          
-          */
-          
-          }
-        </form>
-    {/* <Navbar isLogged={false}/>
-    
-    
-   
-
-
-    <Footer/> */}
-    </>
   );
 };
 
