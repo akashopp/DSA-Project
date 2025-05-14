@@ -1,6 +1,4 @@
-import React, { useEffect, useState } from 'react';
-import logo from "../assets/logo.png";
-import { CiLight } from "react-icons/ci";
+import React, { useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { RocketIcon } from './RocketIcon';
 import { User } from 'lucide-react';
@@ -66,9 +64,14 @@ function Navbar({ isLoggedIn, setIsLoggedIn }) {
               Playground
             </Link>
             {userId != null && (
-              <Link to="/recommendation" className="hover:text-gray-300 transition-colors text-white font-extrabold">
-                Recommendation
-              </Link>
+              <>
+                <Link to="/recommendation" className="hover:text-gray-300 transition-colors text-white font-extrabold">
+                  Recommendation
+                </Link>
+                <Link to="/discuss" className="hover:text-gray-300 transition-colors text-white font-extrabold">
+                  Discuss
+                </Link>
+              </>
             )}
           </div>
         </div>

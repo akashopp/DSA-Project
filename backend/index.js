@@ -7,6 +7,7 @@ import testCaseRoutes from './routes/testcases.routes.js';
 import userRoutes from './routes/user.routes.js';
 import problemRoutes from './routes/problem.routes.js';
 import runcodeRoutes from './routes/runcode.routes.js';
+import discussRoutes from './routes/discuss.routes.js';
 import dotenv from 'dotenv';
 import mongoose from 'mongoose';
 
@@ -51,6 +52,7 @@ mongoose.connect(process.env.URI).then(() => {
     app.use('/user', userRoutes);
     app.use('/problems', problemRoutes);
     app.use('/runcode', runcodeRoutes);
+    app.use('/discuss', discussRoutes);
     app.use((req, res, next) => {
         if (!req.session.user) {
           // If the session doesn't have the user object, log out and redirect
