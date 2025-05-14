@@ -3,7 +3,7 @@ import { formatDistanceToNow } from 'date-fns';
 import ReplyBox from './ReplyBox';
 
 // 👇 Mention parsing logic
-const renderWithMentions = (text) => {
+const renderWithMentions = (text, mentions) => {
   const parts = [];
   let lastIndex = 0;
 
@@ -13,15 +13,22 @@ const renderWithMentions = (text) => {
   while ((match = regex.exec(text)) !== null) {
     const [fullMatch, display, id] = match;
 
+    // Check if mention exists in the mentions list by id or userId
+    const isMentionValid = mentions.some(mention => mention.userId === id || mention.id === id);
+
     // Push text before match
     if (match.index > lastIndex) {
       parts.push(text.slice(lastIndex, match.index));
     }
 
-    // Push styled mention
-    parts.push(
-      <span key={match.index} className="text-blue-400 font-semibold">@{display}</span>
-    );
+    // Push styled mention if it's valid
+    if (isMentionValid) {
+      parts.push(
+        <span key={match.index} className="text-blue-400 font-semibold">@{display}</span>
+      );
+    } else {
+      parts.push(`@${display}`); // Plain mention text if not valid
+    }
 
     lastIndex = regex.lastIndex;
   }
@@ -52,7 +59,7 @@ function ReplyCard({ reply, onReply }) {
       </div>
 
       <p className="whitespace-pre-wrap">
-        {renderWithMentions(reply.body)}
+        {renderWithMentions(reply.body, reply.mentions)}
       </p>
 
       {reply.isAnswer && (

@@ -72,14 +72,20 @@ export const getQuestionById = async (req, res) => {
     const { id } = req.params;
 
     const question = await Question.findById(id)
-      .populate('authorId', 'userId')
-      .populate({
-        path: 'answers',
-        populate: {
+    .populate('authorId', 'userId')
+    .populate({
+      path: 'answers',
+      populate: [
+        {
           path: 'authorId',
           select: 'userId',
         },
-      });
+        {
+          path: 'mentions',
+          select: 'userId', // or any fields you need from User
+        },
+      ],
+    });
 
     if (!question) return res.status(404).json({ error: 'Question not found' });
 
