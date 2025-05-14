@@ -38,7 +38,7 @@ function QuestionBox({
         {tags.map((tag, index) => (
           <span
             key={index}
-            className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full"
+            className="bg-blue-800 text-blue-100 px-3 py-1 rounded-full text-sm"
           >
             #{tag}
           </span>

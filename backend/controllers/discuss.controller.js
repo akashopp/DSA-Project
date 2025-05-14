@@ -60,12 +60,12 @@ export const getQuestionById = async (req, res) => {
     const { id } = req.params;
 
     const question = await Question.findById(id)
-      .populate('authorId', 'username')
+      .populate('authorId', 'userId')
       .populate({
         path: 'answers',
         populate: {
           path: 'authorId',
-          select: 'username',
+          select: 'userId',
         },
       });
 
@@ -74,8 +74,9 @@ export const getQuestionById = async (req, res) => {
     // Optional: increment view count
     question.views += 1;
     await question.save();
+    console.log('question: ', question);
 
-    res.json(question);
+    return res.status(200).json(question);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

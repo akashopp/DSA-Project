@@ -14,6 +14,7 @@ import Problem from "./components/Problem";
 import Recommendation from "./pages/Recommendation";
 import Profile from "./pages/Profile";
 import Discuss from "./pages/Discuss";
+import DiscussionPage from "./pages/DiscussionPage";
 
 function App() {
   // Call validateSession when the component mounts
@@ -59,6 +60,7 @@ function App() {
           <Route path="/recommendation" element={<Recommendation />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/discuss" element={ <Discuss /> }/>
+          <Route path="/discuss/:postId" element={ <DiscussionPage /> } />
         </Routes>
       </Router>
       <div><ToastContainer></ToastContainer></div>
