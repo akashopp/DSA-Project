@@ -9,11 +9,13 @@ import User from '../models/user.model.js'
 export const createQuestion = async (req, res) => {
   try {
     const { title, body, tags } = req.body;
-    const authorId = req.session.user._id;
+    console.log('request : ', req.session);
+    const authorId = req.session.user.id;
 
     const newQuestion = await Question.create({ title, body, tags, authorId });
     res.status(201).json(newQuestion);
   } catch (err) {
+    console.error(err);
     res.status(500).json({ error: err.message });
   }
 };
@@ -24,10 +26,26 @@ export const createQuestion = async (req, res) => {
  */
 export const getAllQuestions = async (req, res) => {
   try {
-    const questions = await Question.find()
-      .sort({ createdAt: 1 })
-      .populate('authorId', 'username');
-    res.json(questions);
+    const search = req.query.search || '';
+    const limit = parseInt(req.query.limit) || 5;
+    const page = parseInt(req.query.page) || 1;
+
+    const query = {
+      title: { $regex: search, $options: 'i' }
+    };
+
+    const total = await Question.countDocuments(query);
+
+    const questions = await Question.find(query)
+      .sort({ createdAt: -1 }) // most recent first
+      .skip((page - 1) * limit)
+      .limit(limit)
+      .populate('authorId', 'userId');
+
+    res.json({
+      questions,
+      total
+    });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

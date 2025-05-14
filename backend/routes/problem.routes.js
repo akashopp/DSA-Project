@@ -5,8 +5,6 @@ const router = express.Router();
 // Get all problems
 router.get('/', async (req, res) => {
   try {
-    console.log(req.session);
-    console.log(req.session.id);
     const problems = await Problem.find({});
     return res.status(200).json(problems);
   } catch (error) {

@@ -11,7 +11,10 @@ import {
 const router = express.Router();
 
 // Create a new question
-router.post('/create', createQuestion);
+router.post('/create', (req, res) => {
+  console.log('req in router: ', req.session);
+  createQuestion(req, res);
+});
 
 // Get all questions (sorted ascending)
 router.get('/', getAllQuestions);
