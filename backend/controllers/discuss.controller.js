@@ -1,6 +1,7 @@
 import Question from '../models/question.model.js';
 import Reply from '../models/reply.model.js';
-import User from '../models/user.model.js'
+import User from '../models/user.model.js';
+import Activity from '../models/activity.model.js';
 
 /**
  * POST /discuss/new
@@ -9,10 +10,21 @@ import User from '../models/user.model.js'
 export const createQuestion = async (req, res) => {
   try {
     const { title, body, tags } = req.body;
-    console.log('request : ', req.session);
+    if(!req.session.user) {
+      return res.status(401).json({ message: "User not authorized, sign up/login" });
+    }
     const authorId = req.session.user.id;
 
     const newQuestion = await Question.create({ title, body, tags, authorId });
+
+    // add new activity for user
+    await Activity.create({
+      userId: authorId,
+      activityType: 'asked_question',
+      activityDescription: `You asked a new question!`,
+      link: `/discuss/${newQuestion._id}`
+    });
+
     res.status(201).json(newQuestion);
   } catch (err) {
     console.error(err);
@@ -74,7 +86,6 @@ export const getQuestionById = async (req, res) => {
     // Optional: increment view count
     question.views += 1;
     await question.save();
-    console.log('question: ', question);
 
     return res.status(200).json(question);
   } catch (err) {
@@ -88,18 +99,40 @@ export const getQuestionById = async (req, res) => {
  */
 export const replyToQuestion = async (req, res) => {
   try {
+    if(!req.session.user) {
+      return res.status(401).json({ message: "User not authorized, sign up/login" });
+    }
     const { id: questionId } = req.params;
-    const { body, parentReplyId } = req.body;
+    const { body, parentReplyId, mentions } = req.body;
     const authorId = req.session.user.id;
     const reply = await Reply.create({
       questionId,
       body,
       authorId,
       parentReplyId: parentReplyId || null,
+      mentions: mentions || null,
     });
 
     await Question.findByIdAndUpdate(questionId, {
       $push: { answers: reply._id },
+    });
+
+    // add new activity for user
+    await Activity.create({
+      userId: authorId,
+      activityType: 'replied',
+      activityDescription: `You added a reply!`,
+      link: `/discuss/${questionId}?reply=${reply._id}`
+    });
+
+    // add new activity for mentioned users
+    mentions.array.forEach(async mention => {
+      await Activity.create({
+        userId: mention,
+        activityType: 'mentioned',
+        activityDescription: `You were mentioned in this discussion!`,
+        link: `/discuss/${questionId}?reply=${reply._id}`
+      })
     });
 
     res.status(201).json(reply);
@@ -114,6 +147,9 @@ export const replyToQuestion = async (req, res) => {
  */
 export const markAsAnswer = async (req, res) => {
   try {
+    if(!req.session.user) {
+      return res.status(401).json({ message: "User not authorized, sign up/login" });
+    }
     const { questionId, replyId } = req.params;
     const userId = req.session.user._id;
 
@@ -142,8 +178,9 @@ export const markAsAnswer = async (req, res) => {
 export const getMentionSuggestions = async (req, res) => {
   try {
     const query = req.query.query || '';
-    const users = await User.find({ name: new RegExp('^' + query, 'i') })
-      .select('username _id')
+    console.log('query: ', query);
+    const users = await User.find({ userId: new RegExp('^' + query, 'i') })
+      .select('userId _id')
       .limit(10);
     res.json(users);
   } catch (err) {

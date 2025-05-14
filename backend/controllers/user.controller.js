@@ -1,4 +1,5 @@
 import User from "../models/user.model.js";
+import Activity from "../models/activity.model.js";
 import mongoose from "mongoose";
 
 // Create a new user
@@ -178,6 +179,34 @@ export const getUsernames = async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 };
+
+
+export const getUserActivity = async (req, res) => {
+  try {
+    if(!req.session.user) {
+      return res.status(401).json({ message: "User not authorized, sign in." });
+    }
+    const activities = await Activity.find({ userId: req.session.user.id })
+      .sort({ createdAt: -1 });
+    res.json(activities);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+}
+
+export const postUserActivity = async (req, res) => {
+  try {
+    if(!req.session.user) {
+      return res.status(401).json({ message: "User not authorized, sign in." });
+    }
+    const activity = await Activity.create(req.body);
+    res.status(201).json(activity);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+}
 
 export const LoginUser = async (req, res) => {
   try {

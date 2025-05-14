@@ -19,6 +19,9 @@ router.post('/create', (req, res) => {
 // Get all questions (sorted ascending)
 router.get('/', getAllQuestions);
 
+// Mention suggestion endpoint
+router.get('/mention-suggestions', getMentionSuggestions);
+
 // Get specific question by ID (including its replies)
 router.get('/:id', getQuestionById);
 
@@ -27,8 +30,5 @@ router.post('/:id/reply', replyToQuestion);
 
 // Mark a reply as the accepted answer
 router.patch('/:questionId/resolve/:replyId', markAsAnswer);
-
-// Mention suggestion endpoint
-router.get('/mention-suggestions', getMentionSuggestions);
 
 export default router;
