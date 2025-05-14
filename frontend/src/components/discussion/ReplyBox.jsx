@@ -46,6 +46,7 @@ const mentionMarkup = "@[__display__](__id__)";
 
 function ReplyBox({ onSubmitReply, parentReplyId }) {
   const [replyText, setReplyText] = useState('');
+  const [mentions, setMentions] = useState([]);
   const debounceTimerRef = useRef(null);
 
   const debouncedFetchSuggestions = (query, callback) => {
@@ -58,7 +59,7 @@ function ReplyBox({ onSubmitReply, parentReplyId }) {
         const res = await fetch(`http://localhost:5000/discuss/mention-suggestions?query=${query}`);
         const data = await res.json();
         const formatted = data.map((user) => ({
-          id: user.userId,
+          id: user._id,
           display: user.userId,
         }));
         callback(formatted);
@@ -66,7 +67,24 @@ function ReplyBox({ onSubmitReply, parentReplyId }) {
         console.error(err);
         callback([]);
       }
-    }, 300); // ⏱️ 300ms debounce
+    }, 300);
+  };
+
+  const extractMentionIds = (text) => {
+    const mentionRegex = /@\[[^\]]+\]\(([^)]+)\)/g;
+    const ids = new Set();
+    let match;
+    while ((match = mentionRegex.exec(text)) !== null) {
+      ids.add(match[1]); // match[1] contains the ID
+    }
+    return Array.from(ids);
+  };
+
+  const handleChange = (e) => {
+    const value = e.target.value;
+    setReplyText(value);
+    const currentMentions = extractMentionIds(value);
+    setMentions(currentMentions);
   };
 
   const handleReplySubmit = () => {
@@ -74,15 +92,17 @@ function ReplyBox({ onSubmitReply, parentReplyId }) {
     onSubmitReply({
       parentReplyId: parentReplyId ?? null,
       body: replyText,
+      mentions: mentions, // send along if needed
     });
     setReplyText('');
+    setMentions([]);
   };
 
   return (
     <div className="bg-gray-800 p-6 rounded-xl relative">
       <MentionsInput
         value={replyText}
-        onChange={(e) => setReplyText(e.target.value)}
+        onChange={handleChange}
         placeholder="Write your reply..."
         className="w-full"
         style={mentionStyles}
@@ -91,7 +111,7 @@ function ReplyBox({ onSubmitReply, parentReplyId }) {
         <Mention
           trigger="@"
           data={debouncedFetchSuggestions}
-          displayTransform={(id) => `@${id}`}
+          displayTransform={(id, display) => `@${display}`}
           appendSpaceOnAdd={true}
         />
       </MentionsInput>
