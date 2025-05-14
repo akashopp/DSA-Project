@@ -1,7 +1,6 @@
 import express from "express";
-// import { CreateUser, getUser, findUser } from "../controllers/user.controller.js";
 
-import { CreateUser, getUser, getUserSolved, AddProblem, DeleteProblem, findUser, LogoutUser, LoginUser } from "../controllers/user.controller.js";
+import { CreateUser, getUser, getUserSolved, AddProblem, DeleteProblem, findUser, LogoutUser, LoginUser, getUsernames } from "../controllers/user.controller.js";
 
 const router = express.Router();
 
@@ -13,8 +12,7 @@ router.route("/deleteproblem").put(DeleteProblem)
 router.route("/finduser").post(findUser);
 router.route("/login").post(LoginUser);
 router.route("/logout").post(LogoutUser)
-// router.route("/getuser").get(getUser);
-// router.route("/delete/:id").delete(deleteUser);
+router.post("/usernames", getUsernames);
 
 // router.route("/addproblem").https://github.com/akashopp/DSA-Project.gitpost(AddProblem);
 

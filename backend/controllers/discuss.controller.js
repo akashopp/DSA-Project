@@ -125,7 +125,7 @@ export const markAsAnswer = async (req, res) => {
 export const getMentionSuggestions = async (req, res) => {
   try {
     const query = req.query.query || '';
-    const users = await User.find({ username: new RegExp('^' + query, 'i') })
+    const users = await User.find({ name: new RegExp('^' + query, 'i') })
       .select('username _id')
       .limit(10);
     res.json(users);

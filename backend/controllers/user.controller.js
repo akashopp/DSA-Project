@@ -107,7 +107,7 @@ export const AddProblem = async (req, res) => {
   try {
     const { userId, problemId } = req.body;
 
-    if (!mongoose.Types.ObjectId.isValid(userId)) {
+    if (!mongoose.Types.ObjectId.isValid(userId) || userId !== req.session.user.id) {
       return res.status(400).json({ message: "Invalid user ID" });
     }
 
@@ -137,7 +137,7 @@ export const DeleteProblem = async (req, res) => {
   try {
     const { userId, problemId } = req.body;
 
-    if (!mongoose.Types.ObjectId.isValid(userId)) {
+    if (!mongoose.Types.ObjectId.isValid(userId) || userId !== req.session.user.id) {
       return res.status(400).json({ message: "Invalid user ID" });
     }
 
@@ -156,6 +156,23 @@ export const DeleteProblem = async (req, res) => {
       message: "Problem deleted successfully",
       problems: user.problemId,
     });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+export const getUsernames = async (req, res) => {
+  try {
+    const { userIds } = req.body;
+
+    if (!Array.isArray(userIds) || userIds.length === 0) {
+      return res.status(400).json({ message: "userIds must be a non-empty array" });
+    }
+
+    const users = await User.find({ _id: { $in: userIds } }).select('_id username');
+
+    res.json(users);
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Internal server error" });
@@ -190,8 +207,6 @@ export const LoginUser = async (req, res) => {
       userId: user.userId,
       name: user.name,
     };
-
-    // req.session.visited = true;
 
     // Save the session
     req.session.save((err) => {
