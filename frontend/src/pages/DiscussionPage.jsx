@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import ReplyManager from '../components/discussion/ReplyManager';
+import ReplyBox from '../components/discussion/ReplyBox';
 
 function DiscussionPage() {
   const { postId } = useParams();
@@ -29,6 +31,23 @@ function DiscussionPage() {
 
   if (!question) {
     return <div className="text-center mt-10 text-red-500">Question not found.</div>;
+  }
+
+  const onSubmitReply = async (replyBody) => {
+    console.log('Replying to:', replyBody.parentReplyId, 'Content:', replyBody.body);
+    try {
+      const res = await fetch(`http://localhost:5000/discuss/${postId}/reply`, {
+        method: "POST",
+        body: JSON.stringify(replyBody),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: "include",
+      });
+
+    } catch (error) {
+      console.error(error);
+    }
   }
 
   return (
@@ -79,23 +98,11 @@ function DiscussionPage() {
       <hr className="border-gray-700 mb-6" />
       <h2 className="text-2xl font-semibold text-gray-100 mb-4">Replies</h2>
       <div className="text-gray-500 italic mb-6">
-        No replies yet. Be the first to respond!
+        <ReplyManager replies={ question.answers } onSubmitReply={ onSubmitReply } />
       </div>
-  
-      {/* Reply form (disabled placeholder) */}
+
       <div className="bg-gray-800 p-6 rounded-xl">
-        <textarea
-          placeholder="Write your reply..."
-          className="w-full p-4 border border-gray-700 bg-gray-900 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
-          rows={4}
-          disabled
-        />
-        <button
-          disabled
-          className="mt-4 bg-blue-600 text-white px-6 py-2 rounded-lg opacity-60 cursor-not-allowed"
-        >
-          Reply
-        </button>
+        <ReplyBox onSubmitReply={ onSubmitReply } />
       </div>
     </motion.div>
   );  

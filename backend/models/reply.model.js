@@ -20,10 +20,6 @@ const replySchema = new Schema({
     ref: 'Reply',
     default: null,
   },
-  mentions: [{
-    type: Schema.Types.ObjectId,
-    ref: 'User',
-  }],
   isAnswer: {
     type: Boolean,
     default: false,

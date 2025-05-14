@@ -20,27 +20,11 @@ function Home(props) {
         </div>
 
         <div className="flex justify-evenly items-center h-5/6 mt-24">
-
-
-          <div className='border-4 h-auto w-1/3 p-3 duration-500 ease-in-out rounded-2xl hover:scale-110 hover:translate-y-4'>
-
-            <img src="https://imagedelivery.net/CLfkmk9Wzy8_9HRyug4EVA/a65736b6-151f-4572-8e10-87b2b75ab100/public" alt="" className='rounded-2xl' />
-
-            <div className='font-semibold flex justify-center p-1 text-[20px] text-white'>
-              Data Structures & Algorithms for Beginners</div>
-
-            <div className='font-light flex justify-center text-white text-sm p-1'>Learn the basic beginner friendly foundations for Data Structures and Algorithms.</div>
-
-            <div className='flex justify-center'>
-              <button className='bg-green-500 font-bold p-2 rounded-xl hover:bg-green-700' onClick={()=>navigate('/courses')}>Learn</button>
-
-            </div>
-
-          </div>          
+    
 
           <div className='border-4 h-auto w-1/3 p-3 duration-500 ease-in-out rounded-2xl hover:scale-110 hover:translate-y-4'>
 
-            <img src="https://imagedelivery.net/CLfkmk9Wzy8_9HRyug4EVA/dd1abac9-220d-4c4d-a8c5-d755e2606800/public" alt="" className='rounded-2xl'/>
+            <img src="https://imagedelivery.net/CLfkmk9Wzy8_9HRyug4EVA/a65736b6-151f-4572-8e10-87b2b75ab100/public" alt="" className='rounded-2xl'/>
 
             <div className='font-semibold flex justify-center p-1 text-[20px] text-white'>
               Practice Data Structures & Algorithms</div>
@@ -55,6 +39,21 @@ function Home(props) {
 
           </div>
 
+          <div className='border-4 h-auto w-1/3 p-3 duration-500 ease-in-out rounded-2xl hover:scale-110 hover:translate-y-4'>
+
+            <img src="https://media.istockphoto.com/id/1320033559/vector/pensive-man-standing-and-making-business-decision-isolated-flat-vector-illustration-cartoon.jpg?s=612x612&w=0&k=20&c=CwX0Ryk_gJVFXcsIHTsMjZX4jRMt4L0CrMPnDjXHlPo=" alt="" className='rounded-2xl' />
+
+            <div className='font-semibold flex justify-center p-1 text-[20px] text-white'>
+              Have a doubt?</div>
+
+            <div className='font-light flex justify-center text-white text-sm p-1'>Ask a question in our discussion section!</div>
+
+            <div className='flex justify-center'>
+              <button className='bg-green-500 font-bold p-2 rounded-xl hover:bg-green-700' onClick={()=>navigate('/discuss')}>Discuss</button>
+
+            </div>
+
+          </div>      
 
         </div>
 

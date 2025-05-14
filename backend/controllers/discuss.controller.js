@@ -89,15 +89,13 @@ export const getQuestionById = async (req, res) => {
 export const replyToQuestion = async (req, res) => {
   try {
     const { id: questionId } = req.params;
-    const { body, parentReplyId, mentions } = req.body;
-    const authorId = req.session.user._id;
-
+    const { body, parentReplyId } = req.body;
+    const authorId = req.session.user.id;
     const reply = await Reply.create({
       questionId,
       body,
       authorId,
       parentReplyId: parentReplyId || null,
-      mentions: mentions || [],
     });
 
     await Question.findByIdAndUpdate(questionId, {
