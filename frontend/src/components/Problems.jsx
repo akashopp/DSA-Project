@@ -99,7 +99,7 @@ function Problems() {
         <div key={topic} className="mb-4">
           {/* Topic Header */}
           <div
-            className="flex justify-center mb-2 cursor-pointer p-5 bg-slate-900"
+            className="flex justify-center mb-2 cursor-pointer p-5 bg-slate-900 rounded-xl"
             onClick={() => toggleTopic(topic)}
           >
             <div className="text-xl">{topic}</div>

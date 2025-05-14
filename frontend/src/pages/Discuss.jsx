@@ -81,7 +81,7 @@ function Discuss() {
   }, [searchQuery, limit, currentPage]);
 
   return (
-    <div className="p-10 min-h-screen bg-gray-900 text-gray-100">
+    <div className="p-10 min-h-screen bg-gray-900 text-gray-100 mt-8 mx-4 rounded-lg">
       <NewQuestionModal
         isOpen={isModalOpen}
         onClose={() => setModalOpen(false)}

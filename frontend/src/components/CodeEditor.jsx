@@ -469,14 +469,14 @@ public class Solution {
   ];
 
   return (
-    <div className={`min-h-screen transition-colors duration-200 ${isDarkMode ? "bg-gray-900 text-gray-200" : "bg-gray-50 text-gray-800"}`}>
-      <div className="container mx-auto px-4 py-8">
+    <div className={`min-h-screen transition-colors duration-200`}>
+      <div className="mx-auto px-4 py-8">
         <div className={`rounded-xl shadow-2xl p-6 ${isDarkMode ? "bg-gray-800" : "bg-white"}`}>
           { location.pathname.endsWith('/playground') && (
             <div className="flex items-center justify-between mb-8">
               <div className="flex items-center gap-2">
                 <Code2 className="w-8 h-8 text-blue-500" />
-                <h1 className="text-3xl font-bold">Code Runner</h1>
+                <h1 className="text-3xl font-bold text-white">Code Runner</h1>
               </div>
             </div>
           )}

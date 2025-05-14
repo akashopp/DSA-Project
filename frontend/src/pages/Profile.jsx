@@ -112,38 +112,40 @@ const Profile = () => {
   // Render activities
   const renderActivity = (activity) => {
     const { activityType, activityDescription, link, createdAt } = activity;
-
-    // Map each activity type to a custom color
-    const activityColors = {
-      solved: 'bg-green-500',  // Green for "solved"
-      wrong_answer: 'bg-red-500',  // Red for "wrong_answer"
-      compilation_error: 'bg-yellow-500',  // Yellow for "compilation_error"
-      replied: 'bg-blue-500',  // Blue for "replied"
-      asked_question: 'bg-purple-500',  // Purple for "asked_question"
-      mentioned: 'bg-pink-500',  // Pink for "mentioned"
+  
+    // Map activity types to both background and text colors for better contrast
+    const activityStyles = {
+      solved: { bg: 'bg-green-600', text: 'text-white' },
+      wrong_answer: { bg: 'bg-red-600', text: 'text-white' },
+      compilation_error: { bg: 'bg-yellow-300', text: 'text-black' },
+      replied: { bg: 'bg-blue-600', text: 'text-white' },
+      asked_question: { bg: 'bg-purple-700', text: 'text-white' },
+      mentioned: { bg: 'bg-pink-500', text: 'text-white' },
     };
-
-    // Get the color class for the activityType, defaulting to gray if type is unknown
-    const activityColorClass = activityColors[activityType] || 'bg-gray-500';
-
+  
+    const { bg, text } = activityStyles[activityType] || {
+      bg: 'bg-gray-600',
+      text: 'text-white',
+    };
+  
     return (
-      <div key={activity._id} className={`p-4 rounded-xl mb-4 ${activityColorClass}`}>
-        <p className="text-white font-semibold">{activityType}</p>
-        <p className="text-gray-300">{activityDescription}</p>
+      <div key={activity._id} className={`p-4 rounded-xl mb-4 ${bg} ${text}`}>
+        <p className="font-semibold capitalize">{activityType.replace('_', ' ')}</p>
+        <p className="opacity-90">{activityDescription}</p>
         {link && (
           <a
             href={link}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-blue-400"
+            className="underline font-medium"
           >
             View Link
           </a>
         )}
-        <p className="text-gray-400 text-sm">{new Date(createdAt).toLocaleDateString()}</p>
+        <p className="text-sm opacity-80">{new Date(createdAt).toLocaleDateString()}</p>
       </div>
     );
-  };
+  };  
 
   return (
     <div className="container mx-auto px-4 py-8">

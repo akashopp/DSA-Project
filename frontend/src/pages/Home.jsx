@@ -46,7 +46,7 @@ function Home(props) {
             <div className='font-semibold flex justify-center p-1 text-[20px] text-white'>
               Have a doubt?</div>
 
-            <div className='font-light flex justify-center text-white text-sm p-1'>Ask a question in our discussion section!</div>
+            <div className='font-light flex justify-center text-white text-sm p-1'>Ask a question in our discuss section!</div>
 
             <div className='flex justify-center'>
               <button className='bg-green-500 font-bold p-2 rounded-xl hover:bg-green-700' onClick={()=>navigate('/discuss')}>Discuss</button>

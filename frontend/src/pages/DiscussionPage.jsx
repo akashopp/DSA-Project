@@ -52,7 +52,7 @@ function DiscussionPage() {
 
   return (
     <motion.div
-      className="w-full max-w-7xl mx-auto p-8 bg-gray-900 text-white shadow-xl rounded-3xl mt-8 border border-gray-800"
+      className="mx-4 p-8 bg-gray-900 text-white shadow-xl rounded-3xl mt-8 border border-gray-800"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
     >

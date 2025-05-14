@@ -4,7 +4,7 @@ import CodeEditor from '../components/CodeEditor'
 function Submit() {
     return (
         <>
-            <div>
+            <div className="mx-4 mt-8">
                 <CodeEditor></CodeEditor>
             </div>
         </>

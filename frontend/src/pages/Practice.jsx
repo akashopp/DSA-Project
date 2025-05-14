@@ -8,7 +8,9 @@ import DynamicProgramming from '../components/DynamicProgramming'
 function Practice() {
   return (
     <>
-      <Problems/>
+      <div className='m-8'>
+        <Problems/>
+      </div>
     </>
   )
 }

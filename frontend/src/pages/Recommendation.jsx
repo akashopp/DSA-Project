@@ -96,7 +96,7 @@ const Recommendation = () => {
     };
 
     return (
-        <div className="p-6">
+        <div className="mx-4 mt-8 p-6">
             <h1 className="text-2xl font-bold text-white mb-4">Problem Recommendation</h1>
 
             {/* Recommended Problem */}
