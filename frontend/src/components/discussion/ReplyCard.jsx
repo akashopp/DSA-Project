@@ -14,7 +14,7 @@ const renderWithMentions = (text, mentions) => {
     const [fullMatch, display, id] = match;
 
     // Check if mention exists in the mentions list by id or userId
-    const isMentionValid = mentions.some(mention => mention.userId === id || mention.id === id);
+    const isMentionValid = mentions.some(mention => mention.userId === id || mention._id === id);
 
     // Push text before match
     if (match.index > lastIndex) {

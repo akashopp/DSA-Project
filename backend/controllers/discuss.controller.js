@@ -132,7 +132,7 @@ export const replyToQuestion = async (req, res) => {
     });
 
     // add new activity for mentioned users
-    mentions.array.forEach(async mention => {
+    mentions.map(async mention => {
       await Activity.create({
         userId: mention,
         activityType: 'mentioned',

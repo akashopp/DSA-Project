@@ -9,6 +9,7 @@ const Profile = () => {
   const [error, setError] = useState(null);
   const [groupedProblems, setGroupedProblems] = useState({});
   const [groupedUserSolvedProblems, setGroupedUserSolvedProblems] = useState({});
+  const [activities, setActivities] = useState([]);
   const navigate = useNavigate();
 
   const userId = localStorage.getItem('userSession'); // Get user ID from localStorage
@@ -28,7 +29,13 @@ const Profile = () => {
     if (userId) {
       const fetchUserData = async () => {
         try {
-          const response = await fetch(`http://localhost:5000/user/getuser/${userId}`);
+          const response = await fetch(`http://localhost:5000/user/getuser/${userId}`, {
+            method: "GET", 
+            headers: {
+              "Content-Type": "application/json",
+            },
+            credentials: "include"
+          });
           if (!response.ok) {
             throw new Error('Failed to fetch user data');
           }
@@ -56,6 +63,15 @@ const Profile = () => {
         const userSolvedIds = Array.isArray(userSolvedData) ? userSolvedData : userSolvedData.problems || [];
         const userSolvedProblems = problems.filter((problem) => userSolvedIds.includes(problem._id));
         setGroupedUserSolvedProblems(ProblemManager.groupByTopic(userSolvedProblems));
+
+        const userActivities = await fetch('http://localhost:5000/user/activities', {
+          method: "GET", 
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include"
+        });
+        setActivities(await userActivities.json());
       } catch (error) {
         console.error('Error fetching problems or user solved problems:', error);
       }
@@ -83,13 +99,6 @@ const Profile = () => {
     );
   }
 
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center h-screen bg-gray-900">
-        <span className="text-xl text-white animate-pulse">Loading...</span>
-      </div>
-    );
-  }  
   let grand_total = 0;
   // Progress computation logic
   const progressByTopic = Object.keys(groupedProblems).map((topic) => {
@@ -99,6 +108,42 @@ const Profile = () => {
     grand_total += solved;
     return { topic, solved, total, percentage };
   });
+
+  // Render activities
+  const renderActivity = (activity) => {
+    const { activityType, activityDescription, link, createdAt } = activity;
+
+    // Map each activity type to a custom color
+    const activityColors = {
+      solved: 'bg-green-500',  // Green for "solved"
+      wrong_answer: 'bg-red-500',  // Red for "wrong_answer"
+      compilation_error: 'bg-yellow-500',  // Yellow for "compilation_error"
+      replied: 'bg-blue-500',  // Blue for "replied"
+      asked_question: 'bg-purple-500',  // Purple for "asked_question"
+      mentioned: 'bg-pink-500',  // Pink for "mentioned"
+    };
+
+    // Get the color class for the activityType, defaulting to gray if type is unknown
+    const activityColorClass = activityColors[activityType] || 'bg-gray-500';
+
+    return (
+      <div key={activity._id} className={`p-4 rounded-xl mb-4 ${activityColorClass}`}>
+        <p className="text-white font-semibold">{activityType}</p>
+        <p className="text-gray-300">{activityDescription}</p>
+        {link && (
+          <a
+            href={link}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-blue-400"
+          >
+            View Link
+          </a>
+        )}
+        <p className="text-gray-400 text-sm">{new Date(createdAt).toLocaleDateString()}</p>
+      </div>
+    );
+  };
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -133,6 +178,16 @@ const Profile = () => {
         <div className='text-center text-2xl text-gray-300'>
           Total solved : {grand_total}
         </div>
+      </div>
+
+      {/* Activities */}
+      <h3 className="text-2xl font-extrabold text-yellow-500 mb-4">Recent Activities</h3>
+      <div>
+        {activities.length === 0 ? (
+          <p className="text-gray-300">No activities found.</p>
+        ) : (
+          activities.map(renderActivity)
+        )}
       </div>
     </div>
   );
