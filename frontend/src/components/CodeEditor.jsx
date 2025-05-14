@@ -297,6 +297,20 @@ public class Solution {
       if (!compileResponse.ok) {
         const errorBody = await compileResponse.json();
         passedAll = false;
+        // add a compilation failed activity on this problem!
+        await fetch('http://localhost:5000/user/activities', {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            userId,
+            activityType: 'compilation_error',
+            activityDescription: `You got a compilation error on ${problemName}`,
+            link: `/problem/${problemId}`
+          }),
+          credentials: "include"
+        });
         throw new Error(errorBody.output || "Compilation failed with no details.");
       }
   
@@ -351,6 +365,37 @@ public class Solution {
           passedAll = false;
         }
         setTestResults([...results]); // Update test results after each test case
+      }
+      if(!passedAll) {
+        // add a wrong answer activity on this problem!
+        await fetch('http://localhost:5000/user/activities', {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            userId,
+            activityType: 'wrong_answer',
+            activityDescription: `You got a wrong answer on ${problemName}`,
+            link: `/problem/${problemId}`
+          }),
+          credentials: "include"
+        });
+      } else {
+        // add a correct answer activity on this problem!
+        await fetch('http://localhost:5000/user/activities', {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            userId,
+            activityType: 'solved',
+            activityDescription: `You solved ${problemName}!`,
+            link: `/problem/${problemId}`
+          }),
+          credentials: "include"
+        });
       }
     } catch (err) {
       console.error("Unexpected error during test execution:", err.message);
