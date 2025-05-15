@@ -8,19 +8,22 @@ function DiscussionPage() {
   const { postId } = useParams();
   const [question, setQuestion] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [replies, setReplies] = useState([]);  // Manage replies state
+
+  const fetchQuestion = async () => {
+    try {
+      const res = await fetch(`http://localhost:5000/discuss/${postId}`);
+      const data = await res.json();
+      setQuestion(data);
+      setReplies(data.answers);  // Initialize replies state
+    } catch (error) {
+      console.error('Failed to fetch question:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchQuestion = async () => {
-      try {
-        const res = await fetch(`http://localhost:5000/discuss/${postId}`);
-        const data = await res.json();
-        setQuestion(data);
-      } catch (error) {
-        console.error('Failed to fetch question:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
 
     fetchQuestion();
   }, [postId]);
@@ -45,6 +48,32 @@ function DiscussionPage() {
         credentials: "include",
       });
 
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
+  const handleMarkAsAnswer = async (reply) => {
+    try {
+      const res = await fetch(`http://localhost:5000/discuss/${postId}/resolve/${reply._id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        credentials: 'include'
+      });
+      const data = await res.json();
+      
+      // Update the local state after the reply is marked as the correct answer
+      setReplies(prevReplies =>
+        prevReplies.map(r =>
+          r._id === reply._id ? { ...r, isAnswer: true } : r
+        )
+      );
+      setQuestion(prevQuestion => ({
+        ...prevQuestion,
+        isResolved: true,  // Set the isResolved property to true
+      }));
     } catch (error) {
       console.error(error);
     }
@@ -98,14 +127,18 @@ function DiscussionPage() {
       <hr className="border-gray-700 mb-6" />
       <h2 className="text-2xl font-semibold text-gray-100 mb-4">Replies</h2>
       <div className="text-gray-500 italic mb-6">
-        <ReplyManager replies={ question.answers } onSubmitReply={ onSubmitReply } />
+        <ReplyManager
+          replies={replies}  // Pass updated replies
+          onSubmitReply={onSubmitReply}
+          handleMarkAsAnswer={handleMarkAsAnswer}
+        />
       </div>
 
       <div className="bg-gray-800 p-6 rounded-xl">
-        <ReplyBox onSubmitReply={ onSubmitReply } />
+        <ReplyBox onSubmitReply={onSubmitReply} />
       </div>
     </motion.div>
-  );  
+  );
 }
 
 export default DiscussionPage;

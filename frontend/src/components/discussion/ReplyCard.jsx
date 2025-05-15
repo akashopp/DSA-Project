@@ -41,7 +41,7 @@ const renderWithMentions = (text, mentions) => {
   return parts;
 };
 
-function ReplyCard({ reply, onReply }) {
+function ReplyCard({ reply, onReply, handleMarkAsAnswer }) {
   const [showReplyBox, setShowReplyBox] = useState(false);
 
   const handleReply = (replyBody) => {
@@ -49,13 +49,21 @@ function ReplyCard({ reply, onReply }) {
     onReply(replyBody);
   };
 
+  const markAsAnswer = (reply) => {
+    console.log('marking : ', reply, ' as answer');
+    handleMarkAsAnswer(reply);
+  }
+
   return (
     <div className="bg-[#1e1e1e] border border-gray-700 rounded-xl p-4 text-gray-200 relative">
       <div className="flex items-center justify-between mb-2">
         <span className="text-sm font-semibold text-blue-400">@{reply.authorId.userId}</span>
-        <span className="text-xs text-gray-400">
-          {formatDistanceToNow(new Date(reply.createdAt))} ago
-        </span>
+        <div>
+          <span className="text-xs text-gray-400 p-2">
+            {formatDistanceToNow(new Date(reply.createdAt))} ago
+          </span>
+          <button title="Mark as answer" onClick={() => markAsAnswer(reply)}>A</button>
+        </div>
       </div>
 
       <p className="whitespace-pre-wrap">

@@ -1,7 +1,7 @@
 import React from 'react';
 import ReplyCard from './ReplyCard';
 
-function ReplyManager({ replies, onSubmitReply }) {
+function ReplyManager({ replies, onSubmitReply, handleMarkAsAnswer }) {
 
   const buildReplyTree = () => {
     const map = {};
@@ -27,7 +27,7 @@ function ReplyManager({ replies, onSubmitReply }) {
     return list.map(reply => (
       <div key={reply._id} className="relative">
         <div className={`pl-4 border-l-2 border-gray-700 ml-${depth > 0 ? 2 : 0}`}>
-          <ReplyCard reply={reply} onReply={onSubmitReply} />
+          <ReplyCard reply={reply} onReply={onSubmitReply} handleMarkAsAnswer={ handleMarkAsAnswer } />
           {reply.children.length > 0 && (
             <div className="mt-3">
               {renderReplies(reply.children, depth + 1)}

@@ -157,11 +157,11 @@ export const markAsAnswer = async (req, res) => {
       return res.status(401).json({ message: "User not authorized, sign up/login" });
     }
     const { questionId, replyId } = req.params;
-    const userId = req.session.user._id;
+    const userId = req.session.user.id;
 
     const question = await Question.findById(questionId);
     if (!question) return res.status(404).json({ error: 'Question not found' });
-
+    console.log(question.authorId, ' ---> ', userId);
     if (!question.authorId.equals(userId))
       return res.status(403).json({ error: 'Only the author can mark an answer' });
 
