@@ -1,20 +1,46 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { RocketIcon } from './RocketIcon';
 import { User } from 'lucide-react';
+import { useSocketStore } from '../store/useSocketStore.js'
 
 function Navbar({ isLoggedIn, setIsLoggedIn }) {
   const navigate = useNavigate();
   const userId = localStorage.getItem("userSession"); // Check for user session
-  // Update isLoggedIn state when userId changes
-  useEffect(() => {
-    console.log('userid : ', userId);
+
+  const [user, setUser] = useState({});
+  const { socket } = useSocketStore();
+
+  const setUp = async () => {
     if (userId) {
+      const user = await fetch(`http://localhost:5000/user/getUser/${userId}`, {
+        method: "GET",
+        credentials: "include",
+      })
+      setUser(await user.json());
       setIsLoggedIn(true);
     } else {
       setIsLoggedIn(false);
     }
+  }
+
+  // Update isLoggedIn state when userId changes
+  useEffect(() => {
+    console.log('userid : ', userId);
+    setUp();
   }, [userId]);
+
+  useEffect(() => {
+    if(socket) {
+      socket.on('mention', () => {
+        setUp();
+      });
+
+      return () => {
+        socket.off('mention');
+      }
+    }
+  })
 
   // Logout function
   const handleLogout = async () => {
@@ -86,9 +112,15 @@ function Navbar({ isLoggedIn, setIsLoggedIn }) {
           {isLoggedIn ? (
             <div className="flex items-center space-x-4">
               {/* Profile section */}
-              <Link to="/profile" className="hover:text-gray-300 transition-colors text-white font-extrabold">
-                <User className="h-6 w-6" />
-              </Link>
+              <div className="relative">
+                <Link to="/profile" className="hover:text-gray-300 transition-colors text-white font-extrabold">
+                  <User className="h-6 w-6" />
+                </Link>
+                {user?.hasMentions && (
+                  <span className="absolute top-0 right-0 block h-2 w-2 rounded-full bg-red-500 ring-2 ring-gray-900" />
+                )}
+              </div>
+              
               <button
                 onClick={handleLogout}
                 className="bg-red-600 hover:bg-red-500 px-4 py-1.5 rounded-md transition-colors"
