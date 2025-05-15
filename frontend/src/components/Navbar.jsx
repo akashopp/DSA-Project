@@ -73,72 +73,50 @@ function Navbar({ isLoggedIn, setIsLoggedIn }) {
   };
 
   return (
-    <>
-      <div className="flex justify-between bg-[#404040] p-2 relative">
-        <div className="flex items-center space-x-8">
-          {/* Logo and brand */}
-          <Link to="/" className="flex items-center space-x-2">
-            <RocketIcon className="w-8 h-8 text-white" />
-          </Link>
-
-          {/* Navigation links */}
-          <div className="flex items-center space-x-6">
-            <Link to="/practice" className="hover:text-gray-300 transition-colors text-white font-extrabold">
-              Practice
-            </Link>
-            <Link to="/playground" className="hover:text-gray-300 transition-colors text-white font-extrabold">
-              Playground
-            </Link>
-            {userId != null && (
-              <>
-                <Link to="/recommendation" className="hover:text-gray-300 transition-colors text-white font-extrabold">
-                  Recommendation
-                </Link>
-                <Link to="/discuss" className="hover:text-gray-300 transition-colors text-white font-extrabold">
-                  Discuss
-                </Link>
-              </>
-            )}
-          </div>
-        </div>
-
-        {/* Middle section - Centered */}
-        <div className="absolute left-1/2 transform -translate-x-1/2 text-white font-extrabold text-4xl">
-          LearnDSA
-        </div>
-
-        {/* Right section */}
-        <div className="flex items-center space-x-4">
-          {isLoggedIn ? (
-            <div className="flex items-center space-x-4">
-              {/* Profile section */}
-              <div className="relative">
-                <Link to="/profile" className="hover:text-gray-300 transition-colors text-white font-extrabold">
-                  <User className="h-6 w-6" />
-                </Link>
-                {user?.hasMentions && (
-                  <span className="absolute top-0 right-0 block h-2 w-2 rounded-full bg-red-500 ring-2 ring-gray-900" />
-                )}
-              </div>
-              
-              <button
-                onClick={handleLogout}
-                className="bg-red-600 hover:bg-red-500 px-4 py-1.5 rounded-md transition-colors"
-              >
-                Logout
-              </button>
-            </div>
-          ) : (
-            <Link
-              to="/register"
-              className="bg-blue-600 hover:bg-blue-500 px-4 py-1.5 rounded-md transition-colors"
-            >
-              Sign in
-            </Link>
-          )}
-        </div>
+    <div className="flex justify-between bg-[#404040] p-2 relative">
+      <div className="flex items-center space-x-8">
+        {/* Logo and brand */}
+        <Link to="/" className="flex items-center space-x-2 px-6 py-2">
+          <RocketIcon className="w-8 h-8 text-white" />
+        </Link>
       </div>
-    </>
+
+      {/* Middle section - Centered */}
+      <div className="absolute left-1/2 transform -translate-x-1/2 text-white font-extrabold text-4xl">
+        LearnDSA
+      </div>
+
+      {/* Right section */}
+      <div className="flex items-center space-x-4">
+        {isLoggedIn ? (
+          <div className="flex items-center space-x-4">
+            {/* Profile section */}
+            <div className="relative">
+              <Link to="/profile" className="hover:text-gray-300 transition-colors text-white font-extrabold">
+                <User className="h-6 w-6" />
+              </Link>
+              {user?.hasMentions && (
+                <span className="absolute top-0 right-0 block h-2 w-2 rounded-full bg-red-500 ring-2 ring-gray-900" />
+              )}
+            </div>
+            
+            <button
+              onClick={handleLogout}
+              className="bg-red-600 hover:bg-red-500 px-4 py-1.5 rounded-md transition-colors"
+            >
+              Logout
+            </button>
+          </div>
+        ) : (
+          <Link
+            to="/register"
+            className="bg-blue-600 hover:bg-blue-500 px-4 py-1.5 rounded-md transition-colors"
+          >
+            Sign in
+          </Link>
+        )}
+      </div>
+    </div>
   );
 }
 
