@@ -22,13 +22,13 @@ export const initSocket = (httpServer, sessionMiddleware) => {
     socket.on('subscribe', (channel) => {
       socket.join(channel);
       console.log(`User ${userId} joined ${channel}`);
-      // Get all rooms the user is currently in
-      const rooms = Array.from(socket.rooms);  // socket.rooms contains the rooms the socket is in
+    //   // Get all rooms the user is currently in
+    //   const rooms = Array.from(socket.rooms);  // socket.rooms contains the rooms the socket is in
     
-      // Exclude the socket.id from the list, since each socket is in a room with its own ID
-      const userRooms = rooms.filter(room => room !== socket.id);
+    //   // Exclude the socket.id from the list, since each socket is in a room with its own ID
+    //   const userRooms = rooms.filter(room => room !== socket.id);
 
-      console.log(`User ${socket.id} is in rooms:`, userRooms);
+    //   console.log(`User ${socket.id} is in rooms:`, userRooms);
     });
 
     socket.on('unsubscribe', (channel) => {

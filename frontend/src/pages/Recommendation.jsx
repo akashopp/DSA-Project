@@ -27,14 +27,14 @@ const Recommendation = () => {
             try {
                 const data = await fetchProblems();
                 setProblems(data);
-
+                console.log('data : ', data);
                 // Group problems by topic
                 const grouped = ProblemManager.groupByTopic(data);
                 setGroupedProblems(grouped);
 
                 // Fetch user solved problem IDs
                 const userSolvedData = await fetchUserProblems(userId);
-
+                console.log('userSolved : ', userSolvedData);
                 // Ensure we extract the correct array
                 const userSolvedIds = Array.isArray(userSolvedData) 
                     ? userSolvedData 

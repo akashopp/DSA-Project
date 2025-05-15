@@ -38,7 +38,7 @@ export const useSocketStore = create((set, get) => ({
   subscribeTo: (channel) => {
     const { socket, subscriptions } = get();
     if (!socket || subscriptions.has(channel)) return;
-    console.log('channel is : ', channel);
+    // console.log('channel is : ', channel);
     socket.emit('subscribe', channel);
     subscriptions.add(channel);
     set({ subscriptions: new Set(subscriptions) }); // trigger reactivity

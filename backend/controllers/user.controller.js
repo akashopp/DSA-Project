@@ -42,6 +42,7 @@ export const CreateUser = async (req, res) => {
 export const getUser = async (req, res) => {
   try {
     const { id } = req.params;
+    console.log('id is : ', id);
     const user = await User.findOne({ _id: id }).select("-password");
     return res.status(200).json(user);
   } catch (error) {
@@ -86,7 +87,7 @@ export const getUserSolved = async (req, res) => {
     const userId = req.params.id;
 
     const user = await User.findById(userId);
-
+    console.log('user is : ', user);
     if (!user) {
       return res.status(400).json({
         message: "User not found",
@@ -95,7 +96,7 @@ export const getUserSolved = async (req, res) => {
     }
 
     return res.status(200).json({
-      problems: user.problemId,
+      problems: JSON.stringify(user.problemId),
     });
   } catch (error) {
     console.error(error);

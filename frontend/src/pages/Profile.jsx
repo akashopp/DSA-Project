@@ -40,6 +40,7 @@ const Profile = () => {
             throw new Error('Failed to fetch user data');
           }
           const data = await response.json();
+          console.log('data : ', data);
           setUserData(data);
           setLoading(false);
         } catch (err) {
