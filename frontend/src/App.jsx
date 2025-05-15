@@ -1,7 +1,6 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
 import Navbar from "./components/Navbar";
-import Courses from "./pages/Courses";
 import Lessons from "./pages/Lessons";
 import Home from "./pages/Home";
 import Practice from "./pages/Practice";
@@ -15,25 +14,39 @@ import Recommendation from "./pages/Recommendation";
 import Profile from "./pages/Profile";
 import Discuss from "./pages/Discuss";
 import DiscussionPage from "./pages/DiscussionPage";
+import { useSocketStore } from "./store/useSocketStore";
 
 function App() {
-  // Call validateSession when the component mounts
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const location = useLocation();
+  const { connectSocket, subscribeTo, unsubscribeFrom, switchDiscussionRoom } = useSocketStore();
 
-  // Function to validate the session
+  // Validate user session and connect socket
   const validateSession = async () => {
     try {
       const response = await fetch('http://localhost:5000/', {
         method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include", // Include credentials (cookies, auth tokens, etc.)
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
       });
       const data = await response.json();
-      console.log("Session validated: ", data);
+      connectSocket(localStorage.getItem('userSession'));
+      // Always subscribe to 'mention'
+      subscribeTo('mention');
+      const path = location.pathname;
+      if (path.startsWith('/discuss/')) {
+        const postId = path.split('/discuss/')[1];
+        subscribeTo('discuss');
+        unsubscribeFrom('discuss');
+        switchDiscussionRoom(postId);
+      } else if (path.startsWith('/discuss')) {
+        subscribeTo('discuss');
+        switchDiscussionRoom(null);
+      } else {
+        unsubscribeFrom('discuss');
+        switchDiscussionRoom(null);
+      }
     } catch (err) {
-      console.error('Error validating session: ', err);
       localStorage.removeItem("userSession");
       setIsLoggedIn(false);
     }
@@ -43,29 +56,54 @@ function App() {
     validateSession();
   }, []);
 
+  // Socket room logic based on route
+  useEffect(() => {
+    const path = location.pathname;
+    subscribeTo('mention');
+    if (path.startsWith('/discuss/')) {
+      const postId = path.split('/discuss/')[1];
+      subscribeTo('discuss');
+      unsubscribeFrom('discuss');
+      switchDiscussionRoom(postId);
+    } else if (path.startsWith('/discuss')) {
+      subscribeTo('discuss');
+      switchDiscussionRoom(null);
+    } else {
+      unsubscribeFrom('discuss');
+      switchDiscussionRoom(null);
+    }
+
+    return () => {
+      // Optional: cleanup logic if needed
+    };
+  }, [location]);
+
   return (
     <>
-      <Router>
-        <Navbar isLoggedIn={isLoggedIn} setIsLoggedIn={setIsLoggedIn} /> {/* If userId is dynamic, you can pass it accordingly */}
-        <Routes>
-          <Route path="/" element={<Home />} />
-          {/* <Route path="/courses" element={<Courses />} /> */}
-          <Route path="/lessons" element={<Lessons />} />
-          <Route path="/practice" element={<Practice />} />
-          <Route path="/roadmap" element={<Roadmap />} />
-          <Route path="/playground" element={<Submit />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/problem/:problemId" element={<Problem />} />
-          <Route path="/recommendation" element={<Recommendation />} />
-          <Route path="/profile" element={<Profile />} />
-          <Route path="/discuss" element={ <Discuss /> }/>
-          <Route path="/discuss/:postId" element={ <DiscussionPage /> } />
-        </Routes>
-      </Router>
-      <div><ToastContainer></ToastContainer></div>
+      <Navbar isLoggedIn={isLoggedIn} setIsLoggedIn={setIsLoggedIn} />
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/lessons" element={<Lessons />} />
+        <Route path="/practice" element={<Practice />} />
+        <Route path="/roadmap" element={<Roadmap />} />
+        <Route path="/playground" element={<Submit />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/problem/:problemId" element={<Problem />} />
+        <Route path="/recommendation" element={<Recommendation />} />
+        <Route path="/profile" element={<Profile />} />
+        <Route path="/discuss" element={<Discuss />} />
+        <Route path="/discuss/:postId" element={<DiscussionPage />} />
+      </Routes>
+      <ToastContainer />
     </>
   );
 }
 
-export default App;
+export default function AppWithRouter() {
+  return (
+    <Router>
+      <App />
+    </Router>
+  );
+}
