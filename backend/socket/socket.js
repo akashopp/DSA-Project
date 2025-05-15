@@ -1,15 +1,17 @@
 import { Server } from 'socket.io';
 import sharedSession from 'express-socket.io-session';
 
+let io;
+const onlineUsers = new Map(); // userId => Set of socketIds
+
 export const initSocket = (httpServer, sessionMiddleware) => {
-  const io = new Server(httpServer, {
+  io = new Server(httpServer, {
     cors: {
       origin: 'http://localhost:5173',
       credentials: true,
     },
   });
 
-  // Share session with Socket.IO
   io.use(sharedSession(sessionMiddleware, {
     autoSave: true,
   }));
@@ -18,17 +20,19 @@ export const initSocket = (httpServer, sessionMiddleware) => {
     const userId = socket.handshake.auth?.userId || socket.handshake.session?.user?.id;
     console.log(`User connected: ${userId}`);
 
+    // Track user as online
+    if (userId) {
+      if (!onlineUsers.has(userId)) {
+        onlineUsers.set(userId, new Set());
+      }
+      onlineUsers.get(userId).add(socket.id);
+      emitOnlineUsers(); // Optionally notify all users
+    }
+
     // Dynamic room subscriptions
     socket.on('subscribe', (channel) => {
       socket.join(channel);
       console.log(`User ${userId} joined ${channel}`);
-    //   // Get all rooms the user is currently in
-    //   const rooms = Array.from(socket.rooms);  // socket.rooms contains the rooms the socket is in
-    
-    //   // Exclude the socket.id from the list, since each socket is in a room with its own ID
-    //   const userRooms = rooms.filter(room => room !== socket.id);
-
-    //   console.log(`User ${socket.id} is in rooms:`, userRooms);
     });
 
     socket.on('unsubscribe', (channel) => {
@@ -38,8 +42,32 @@ export const initSocket = (httpServer, sessionMiddleware) => {
 
     socket.on('disconnect', () => {
       console.log(`User disconnected: ${userId}`);
+      if (userId && onlineUsers.has(userId)) {
+        const userSockets = onlineUsers.get(userId);
+        userSockets.delete(socket.id);
+        if (userSockets.size === 0) {
+          onlineUsers.delete(userId);
+        }
+        emitOnlineUsers();
+      }
     });
   });
 
   return io;
+};
+
+// Utility to emit list of online users
+const emitOnlineUsers = () => {
+  const users = Array.from(onlineUsers.keys());
+  io.emit('onlineUsers', users);
+};
+
+// Accessors
+export const getIO = () => {
+  if (!io) throw new Error("Socket.io not initialized");
+  return io;
+};
+
+export const getOnlineUsers = () => {
+  return onlineUsers;
 };

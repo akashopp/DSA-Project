@@ -3,12 +3,15 @@ import { useParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import ReplyManager from '../components/discussion/ReplyManager';
 import ReplyBox from '../components/discussion/ReplyBox';
+import { useSocketStore } from '../store/useSocketStore';
 
 function DiscussionPage() {
   const { postId } = useParams();
   const [question, setQuestion] = useState(null);
   const [loading, setLoading] = useState(true);
   const [replies, setReplies] = useState([]);  // Manage replies state
+
+  const { socket } = useSocketStore();
 
   const fetchQuestion = async () => {
     try {
@@ -22,6 +25,18 @@ function DiscussionPage() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if(socket) {
+      socket.on('refresh', () => {
+        console.log('refreshing page!');
+        fetchQuestion();
+      });
+      return () => {
+        socket.off('refresh');
+      }
+    }
+  }, [socket]);
 
   useEffect(() => {
 

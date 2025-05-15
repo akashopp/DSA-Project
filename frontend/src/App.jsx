@@ -19,7 +19,7 @@ import { useSocketStore } from "./store/useSocketStore";
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const location = useLocation();
-  const { connectSocket, subscribeTo, unsubscribeFrom, switchDiscussionRoom } = useSocketStore();
+  const { socket, connectSocket, subscribeTo, unsubscribeFrom, switchDiscussionRoom } = useSocketStore();
 
   // Validate user session and connect socket
   const validateSession = async () => {
@@ -77,6 +77,17 @@ function App() {
       // Optional: cleanup logic if needed
     };
   }, [location]);
+
+  useEffect(() => {
+    if(socket) {
+      socket.on('mention', (body) => {
+        console.log('mention received!\n', body);
+      });
+      return () => {
+        socket.off('mention');
+      }
+    }
+  }, [socket]);
 
   return (
     <>

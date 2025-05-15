@@ -209,6 +209,20 @@ export const postUserActivity = async (req, res) => {
   }
 }
 
+export const clearMentions = async (req, res) => {
+  try {
+    if(!req.session.user) {
+      return res.status(401).json({ message: "User not authorized, sign in." });
+    }
+    const id = req.session.user.id;
+    const user = await User.findByIdAndUpdate(id, { hasMentions: false }).select("-password");
+    res.status(200).json(user);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+}
+
 export const LoginUser = async (req, res) => {
   try {
     const { userId, password } = req.body;

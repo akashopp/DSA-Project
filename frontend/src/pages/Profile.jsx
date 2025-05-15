@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { fetchProblems, fetchUserProblems, ProblemManager } from '../utils'; // Assuming these are in the utils file
 import { toast } from 'react-toastify';
+import { useSocketStore } from '../store/useSocketStore';
 
 const Profile = () => {
   const [userData, setUserData] = useState(null);
@@ -11,6 +12,7 @@ const Profile = () => {
   const [groupedUserSolvedProblems, setGroupedUserSolvedProblems] = useState({});
   const [activities, setActivities] = useState([]);
   const navigate = useNavigate();
+  const { socket } = useSocketStore();
 
   const userId = localStorage.getItem('userSession'); // Get user ID from localStorage
 
@@ -25,61 +27,69 @@ const Profile = () => {
     }
   }, [userId, navigate]);
 
+  const fetchUserData = async () => {
+    try {
+      const response = await fetch(`http://localhost:5000/user/getuser/${userId}`, {
+        method: "GET", 
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include"
+      });
+      if (!response.ok) {
+        throw new Error('Failed to fetch user data');
+      }
+      const clearResponse = await fetch('http://localhost:5000/user/clearMentions', {
+        method: "POST",
+        body: {},
+        credentials: "include"
+      })
+      const data = await clearResponse.json();
+      console.log('data : ', data);
+      setUserData(data);
+      const problems = await fetchProblems();
+      const grouped = ProblemManager.groupByTopic(problems);
+      setGroupedProblems(grouped);
+
+      const userSolvedData = await fetchUserProblems(userId);
+      const userSolvedIds = Array.isArray(userSolvedData) ? userSolvedData : userSolvedData.problems || [];
+      const userSolvedProblems = problems.filter((problem) => userSolvedIds.includes(problem._id));
+      setGroupedUserSolvedProblems(ProblemManager.groupByTopic(userSolvedProblems));
+
+      const userActivities = await fetch('http://localhost:5000/user/activities', {
+        method: "GET", 
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include"
+      });
+      setActivities(await userActivities.json());
+      setLoading(false);
+    } catch (err) {
+      setError(err.message);
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     if (userId) {
-      const fetchUserData = async () => {
-        try {
-          const response = await fetch(`http://localhost:5000/user/getuser/${userId}`, {
-            method: "GET", 
-            headers: {
-              "Content-Type": "application/json",
-            },
-            credentials: "include"
-          });
-          if (!response.ok) {
-            throw new Error('Failed to fetch user data');
-          }
-          const data = await response.json();
-          console.log('data : ', data);
-          setUserData(data);
-          setLoading(false);
-        } catch (err) {
-          setError(err.message);
-          setLoading(false);
-        }
-      };
-
       fetchUserData();
     }
   }, [userId]);
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const problems = await fetchProblems();
-        const grouped = ProblemManager.groupByTopic(problems);
-        setGroupedProblems(grouped);
-
-        const userSolvedData = await fetchUserProblems(userId);
-        const userSolvedIds = Array.isArray(userSolvedData) ? userSolvedData : userSolvedData.problems || [];
-        const userSolvedProblems = problems.filter((problem) => userSolvedIds.includes(problem._id));
-        setGroupedUserSolvedProblems(ProblemManager.groupByTopic(userSolvedProblems));
-
-        const userActivities = await fetch('http://localhost:5000/user/activities', {
-          method: "GET", 
-          headers: {
-            "Content-Type": "application/json",
-          },
-          credentials: "include"
-        });
-        setActivities(await userActivities.json());
-      } catch (error) {
-        console.error('Error fetching problems or user solved problems:', error);
+    if(socket) {
+      const onRefresh = () => {
+        console.log('mentioned in profile lol');
+        if(userId) fetchUserData();
       }
-    };
-
-    if (userId) fetchData();
-  }, [userId]);
+      socket.off('mention', onRefresh); // 👈 Ensure we don't register it multiple times
+      socket.on('mention', onRefresh);  
+      return () => {
+        socket.off('mention', onRefresh); // 👈 Clean up on unmount
+      };
+    }
+  })
 
   // Prevent rendering profile content if userId is null
   if (!userId) return null;

@@ -1,6 +1,6 @@
 import express from "express";
 
-import { CreateUser, getUser, getUserSolved, AddProblem, DeleteProblem, findUser, LogoutUser, LoginUser, getUsernames, getUserActivity, postUserActivity } from "../controllers/user.controller.js";
+import { CreateUser, getUser, getUserSolved, AddProblem, DeleteProblem, findUser, LogoutUser, LoginUser, getUsernames, getUserActivity, postUserActivity, clearMentions } from "../controllers/user.controller.js";
 
 const router = express.Router();
 
@@ -15,6 +15,7 @@ router.route("/logout").post(LogoutUser)
 router.post("/usernames", getUsernames);
 router.get("/activities", getUserActivity);
 router.post("/activities", postUserActivity);
+router.post("/clearMentions", clearMentions);
 
 // router.route("/addproblem").https://github.com/akashopp/DSA-Project.gitpost(AddProblem);
 

@@ -31,6 +31,11 @@ const userSchema = new mongoose.Schema({
   problemId : {
     type : [String],
     required: true
+  },
+
+  hasMentions: {
+    type: Boolean,
+    default: false,
   }
 
 }, {timestamps : true});

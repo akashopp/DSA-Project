@@ -1,8 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import QuestionBox from '../components/discuss/QuestionBox';
 import QuestionBoxSkeleton from '../components/discuss/QuestionBoxSkeleton';
 import NewQuestionModal from '../components/discuss/NewQuestionModal';
+import { useSocketStore } from '../store/useSocketStore';
 
 function Discuss() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -17,68 +18,81 @@ function Discuss() {
 
   const [isModalOpen, setModalOpen] = useState(false);
 
-  const handleSubmitQuestion = async (questionData) => {
-    const res = await fetch('http://localhost:5000/discuss/create', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(questionData),
-      credentials: 'include'
-    });
+  const { socket } = useSocketStore();
 
-    if (!res.ok) throw new Error('Failed to post question');
+  // Fetch questions function (memoized to avoid unnecessary recreation)
+  const fetchQuestions = useCallback(async () => {
+    setLoading(true);
+    try {
+      const query = new URLSearchParams({
+        search: searchQuery,
+        limit,
+        page: currentPage,
+      });
 
-    // Optional: refresh question list here
-  };
+      const res = await fetch(`http://localhost:5000/discuss?${query}`);
+      if (!res.ok) throw new Error('Failed to fetch questions');
+      const data = await res.json();
+
+      setQuestions(data.questions || []);
+      setTotalPages(Math.ceil((data.total || 0) / limit));
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  }, [searchQuery, limit, currentPage]);
 
   // Sync URL params with state
   useEffect(() => {
     const params = {
       search: searchQuery || '',
-      limit: limit !== 5 ? String(limit) : 5,
-      page: currentPage !== 1 ? String(currentPage) : 1,
+      limit: limit !== 5 ? String(limit) : '5',
+      page: currentPage !== 1 ? String(currentPage) : '1',
     };
     setSearchParams(params);
   }, [searchQuery, limit, currentPage, setSearchParams]);
 
-  // Fetch from API
+  // Fetch questions when searchQuery, limit or currentPage changes
   useEffect(() => {
     const controller = new AbortController();
     const debounceTimeout = setTimeout(() => {
-      const fetchQuestions = async () => {
-        setLoading(true);
-        try {
-          const query = new URLSearchParams({
-            search: searchQuery,
-            limit,
-            page: currentPage,
-          });
-  
-          const res = await fetch(`http://localhost:5000/discuss?${query}`, {
-            signal: controller.signal,
-          });
-  
-          if (!res.ok) throw new Error('Failed to fetch questions');
-          const data = await res.json();
-  
-          setQuestions(data.questions || []);
-          setTotalPages(Math.ceil((data.total || 0) / limit));
-        } catch (err) {
-          if (err.name !== 'AbortError') {
-            console.error(err);
-          }
-        } finally {
-          setLoading(false);
-        }
-      };
-  
       fetchQuestions();
-    }, 400); // ⏱️ Debounce delay (ms)
-  
+    }, 400);
+
     return () => {
-      clearTimeout(debounceTimeout); // Cancel timeout if effect runs again
-      controller.abort(); // Cancel ongoing fetch
+      clearTimeout(debounceTimeout);
+      controller.abort();
     };
-  }, [searchQuery, limit, currentPage]);
+  }, [fetchQuestions]);
+
+  // Listen to socket 'refresh' event to trigger refetch
+  useEffect(() => {
+    if (!socket) return;
+
+    const onRefresh = () => {
+      fetchQuestions();
+    };
+
+    socket.on('refresh', onRefresh);
+
+    return () => {
+      socket.off('refresh', onRefresh);
+    };
+  }, [socket, fetchQuestions]);
+
+  const handleSubmitQuestion = async (questionData) => {
+    const res = await fetch('http://localhost:5000/discuss/create', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(questionData),
+      credentials: 'include',
+    });
+
+    if (!res.ok) throw new Error('Failed to post question');
+    // After successful post, fetch questions to update list
+    fetchQuestions();
+  };
 
   return (
     <div className="p-10 min-h-screen bg-gray-900 text-gray-100 mt-8 mx-4 rounded-lg">

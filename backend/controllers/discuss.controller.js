@@ -2,6 +2,7 @@ import Question from '../models/question.model.js';
 import Reply from '../models/reply.model.js';
 import User from '../models/user.model.js';
 import Activity from '../models/activity.model.js';
+import { getIO, getOnlineUsers } from '../socket/socket.js';
 
 /**
  * POST /discuss/new
@@ -24,6 +25,11 @@ export const createQuestion = async (req, res) => {
       activityDescription: `You asked a new question!`,
       link: `/discuss/${newQuestion._id}`
     });
+
+    const io = getIO();
+
+    // Emit real-time reply to everyone in this room! discuss
+    io.to(`discuss`).emit('refresh');
 
     res.status(201).json(newQuestion);
   } catch (err) {
@@ -105,44 +111,68 @@ export const getQuestionById = async (req, res) => {
  */
 export const replyToQuestion = async (req, res) => {
   try {
-    if(!req.session.user) {
+    if (!req.session.user) {
       return res.status(401).json({ message: "User not authorized, sign up/login" });
     }
+
     const { id: questionId } = req.params;
     const { body, parentReplyId, mentions } = req.body;
     const authorId = req.session.user.id;
+
     const reply = await Reply.create({
       questionId,
       body,
       authorId,
       parentReplyId: parentReplyId || null,
-      mentions: mentions || null,
+      mentions: mentions || [],
     });
 
     await Question.findByIdAndUpdate(questionId, {
       $push: { answers: reply._id },
     });
 
-    // add new activity for user
+    // Add reply activity for the author
     await Activity.create({
       userId: authorId,
       activityType: 'replied',
       activityDescription: `You added a reply!`,
-      link: `/discuss/${questionId}?reply=${reply._id}`
+      link: `/discuss/${questionId}?reply=${reply._id}`,
     });
 
-    // add new activity for mentioned users
-    mentions.map(async mention => {
+    // Notify mentioned users
+    const io = getIO();
+    const mentionActivities = mentions?.map(async (mentionedUserId) => {
+      // Save activity to DB
       await Activity.create({
-        userId: mention,
+        userId: mentionedUserId,
         activityType: 'mentioned',
         activityDescription: `You were mentioned in this discussion!`,
-        link: `/discuss/${questionId}?reply=${reply._id}`
-      })
+        link: `/discuss/${questionId}?reply=${reply._id}`,
+      });
+
+      await User.findByIdAndUpdate(mentionedUserId, { hasMentions: true });
+
+      // Emit real-time notification to each socket if the user is online
+      const socketIdSet = getOnlineUsers().get(mentionedUserId);
+      if (socketIdSet) {
+        for (const socketId of socketIdSet) {
+          io.to(socketId).emit('mention', {
+            message: `You were mentioned in a discussion.`,
+            link: `/discuss/${questionId}?reply=${reply._id}`,
+            type: 'mention',
+          });
+        }
+      }
     });
+
+    await Promise.all(mentionActivities);
+
+    // Emit real-time reply to everyone in this room! discussion:questionId
+    io.to(`discussion:${questionId}`).emit('refresh');
 
     res.status(201).json(reply);
   } catch (err) {
+    console.error(err);
     res.status(500).json({ error: err.message });
   }
 };
@@ -169,9 +199,17 @@ export const markAsAnswer = async (req, res) => {
     question.resolvedAnswerId = replyId;
     await question.save();
 
-    await Reply.findByIdAndUpdate(replyId, { isAnswer: true });
+    const reply = await Reply.findByIdAndUpdate(replyId, { isAnswer: true });
 
-    res.json({ message: 'Marked as answer' });
+    const io = getIO();
+
+    // Emit real-time reply to everyone in this room! discussion:questionId
+    io.to(`discussion:${questionId}`).emit('refresh');
+
+    res.json({
+      question: question,
+      reply: reply
+    });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
