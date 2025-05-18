@@ -14,6 +14,7 @@ import userRoutes from './routes/user.routes.js';
 import problemRoutes from './routes/problem.routes.js';
 import runcodeRoutes from './routes/runcode.routes.js';
 import discussRoutes from './routes/discuss.routes.js';
+import solutionRoutes from './routes/solution.routes.js';
 
 dotenv.config();
 const app = express();
@@ -56,6 +57,7 @@ mongoose.connect(process.env.URI).then(() => {
   app.use('/problems', problemRoutes);
   app.use('/runcode', runcodeRoutes);
   app.use('/discuss', discussRoutes);
+  app.use('/solution', solutionRoutes);
 
   app.use((req, res, next) => {
     if (!req.session.user) {

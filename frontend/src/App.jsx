@@ -15,6 +15,7 @@ import Profile from "./pages/Profile";
 import Discuss from "./pages/Discuss";
 import DiscussionPage from "./pages/DiscussionPage";
 import { useSocketStore } from "./store/useSocketStore";
+import Solution from "./pages/Solution";
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -105,6 +106,7 @@ function App() {
         <Route path="/profile" element={<Profile />} />
         <Route path="/discuss" element={<Discuss />} />
         <Route path="/discuss/:postId" element={<DiscussionPage />} />
+        <Route path="/solution/:problemId" element={<Solution />} />
       </Routes>
       <ToastContainer />
     </>

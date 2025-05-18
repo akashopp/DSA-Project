@@ -15,6 +15,7 @@ import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 import { debounce } from 'lodash';
 import { useLocation } from "react-router-dom";
+import AlertModal from "./AlertModal";
 
 // Error Boundary Component to catch errors in the app
 
@@ -36,6 +37,13 @@ const CodeEditor = ({ problem_name = ''}) => {
   const userId = localStorage.getItem("userSession");
   const location = useLocation();
   const problemId = location.pathname.split('/')[2] || null;
+  const [showAlert, setShowAlert] = useState(false);
+  const [alertData, setAlertData] = useState({
+    type: 'error',
+    data: '',
+    duration: 5000
+  });
+
   // Example templates for code
   const templates = {
     cpp: `#include <bits/stdc++.h>
@@ -188,6 +196,13 @@ public class Solution {
   
       if (!compileResponse.ok) {
         const errorBody = await compileResponse.json();
+        // Show AlertModal
+        setAlertData({
+          type: 'error',
+          data: `Compilation Error ${problemName ? `on ${problemName}` : ''}`,
+          duration: 6000
+        });
+        setShowAlert(true);
         throw new Error(errorBody.output || "Compilation failed with no details.");
       }
   
@@ -297,7 +312,8 @@ public class Solution {
       if (!compileResponse.ok) {
         const errorBody = await compileResponse.json();
         passedAll = false;
-        // add a compilation failed activity on this problem!
+
+        // Log activity
         await fetch('http://localhost:5000/user/activities', {
           method: "POST",
           headers: {
@@ -311,6 +327,15 @@ public class Solution {
           }),
           credentials: "include"
         });
+
+        // Show AlertModal
+        setAlertData({
+          type: 'error',
+          data: `Compilation Error on "${problemName}"`,
+          duration: 6000
+        });
+        setShowAlert(true);
+
         throw new Error(errorBody.output || "Compilation failed with no details.");
       }
   
@@ -495,6 +520,14 @@ public class Solution {
           )}
 
           <div className="flex gap-4">
+            {showAlert && (
+              <AlertModal
+                data={alertData.data}
+                type={alertData.type}
+                duration={alertData.duration}
+                onClose={() => setShowAlert(false)}
+              />
+            )}
             <select
               className={`p-2 rounded-lg ${isDarkMode ? "bg-gray-700 text-gray-200" : "bg-gray-200 text-gray-800"}`}
               value={language}
@@ -591,9 +624,13 @@ public class Solution {
           )}
 
           {error && (
-            <div className="mb-6">
-              <h2 className="text-xl font-semibold text-red-500">Error:</h2>
-              <pre className="p-4 bg-gray-800 text-red-200 rounded-lg">{error}</pre>
+            <div className="mb-6 w-full mx-auto rounded-lg border border-red-300 bg-red-100 text-red-900 shadow-md">
+              <div className="px-8 py-6">
+                <h2 className="text-lg font-semibold mb-3">Compilation Error</h2>
+                <pre className="whitespace-pre-wrap font-mono text-sm bg-red-50 p-4 rounded-md border border-red-200 overflow-auto">
+                  {error}
+                </pre>
+              </div>
             </div>
           )}
 

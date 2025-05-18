@@ -55,12 +55,12 @@ const Problem = () => {
       <pre className="bg-gray-800 text-gray-300 p-3 rounded-md whitespace-pre-wrap">{problem.output_format}</pre>
 
       <a 
-        href={problem.url} 
+        href={`/solution/${problemId}`} 
         target="_blank" 
         rel="noopener noreferrer" 
         className="block mt-4 text-blue-400 hover:underline"
       >
-        View on LeetCode
+        View Solution
       </a>
 
       {/* Code Submission Section */}
