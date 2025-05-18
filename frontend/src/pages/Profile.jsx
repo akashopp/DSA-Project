@@ -63,7 +63,9 @@ const Profile = () => {
         },
         credentials: "include"
       });
-      setActivities(await userActivities.json());
+      const rawActivities = await userActivities.json();
+      const sortedActivities = rawActivities.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+      setActivities(sortedActivities);
       setLoading(false);
     } catch (err) {
       setError(err.message);
@@ -120,43 +122,13 @@ const Profile = () => {
     return { topic, solved, total, percentage };
   });
 
-  // Render activities
-  const renderActivity = (activity) => {
-    const { activityType, activityDescription, link, createdAt } = activity;
-  
-    // Map activity types to both background and text colors for better contrast
-    const activityStyles = {
-      solved: { bg: 'bg-green-600', text: 'text-white' },
-      wrong_answer: { bg: 'bg-red-600', text: 'text-white' },
-      compilation_error: { bg: 'bg-yellow-300', text: 'text-black' },
-      replied: { bg: 'bg-blue-600', text: 'text-white' },
-      asked_question: { bg: 'bg-purple-700', text: 'text-white' },
-      mentioned: { bg: 'bg-pink-500', text: 'text-white' },
-    };
-  
-    const { bg, text } = activityStyles[activityType] || {
-      bg: 'bg-gray-600',
-      text: 'text-white',
-    };
-  
-    return (
-      <div key={activity._id} className={`p-4 rounded-xl mb-4 ${bg} ${text}`}>
-        <p className="font-semibold capitalize">{activityType.replace('_', ' ')}</p>
-        <p className="opacity-90">{activityDescription}</p>
-        {link && (
-          <a
-            href={link}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="underline font-medium"
-          >
-            View Link
-          </a>
-        )}
-        <p className="text-sm opacity-80">{new Date(createdAt).toLocaleDateString()}</p>
-      </div>
-    );
-  };  
+  // Group activities by date (e.g. "2025-05-18")
+  const groupedActivities = activities.reduce((acc, activity) => {
+    const date = new Date(activity.createdAt).toLocaleDateString();
+    if (!acc[date]) acc[date] = [];
+    acc[date].push(activity);
+    return acc;
+  }, {});
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -196,10 +168,44 @@ const Profile = () => {
       {/* Activities */}
       <h3 className="text-2xl font-extrabold text-yellow-500 mb-4">Recent Activities</h3>
       <div>
-        {activities.length === 0 ? (
+        {Object.keys(groupedActivities).length === 0 ? (
           <p className="text-gray-300">No activities found.</p>
         ) : (
-          activities.map(renderActivity)
+          Object.entries(groupedActivities).map(([date, activities]) => (
+            <div key={date} className="mb-8">
+              <h4 className="text-xl font-bold text-white mb-2 border-b border-gray-500 pb-1"> Activities on {date}</h4>
+              {activities.map((activity) => {
+                const { activityType, activityDescription, link, createdAt } = activity;
+                const activityStyles = {
+                  solved: { bg: 'bg-green-600', text: 'text-white' },
+                  wrong_answer: { bg: 'bg-red-600', text: 'text-white' },
+                  compilation_error: { bg: 'bg-yellow-300', text: 'text-black' },
+                  replied: { bg: 'bg-blue-600', text: 'text-white' },
+                  asked_question: { bg: 'bg-purple-700', text: 'text-white' },
+                  mentioned: { bg: 'bg-pink-500', text: 'text-white' },
+                };
+                const { bg, text } = activityStyles[activityType] || { bg: 'bg-gray-600', text: 'text-white' };
+
+                return (
+                  <div key={activity._id} className={`p-4 rounded-xl mb-4 ${bg} ${text}`}>
+                    <p className="font-semibold capitalize">{activityType.replace('_', ' ')}</p>
+                    <p className="opacity-90">{activityDescription}</p>
+                    {link && (
+                      <a
+                        href={link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="underline font-medium"
+                      >
+                        View Link
+                      </a>
+                    )}
+                    <p className="text-sm opacity-80">{new Date(createdAt).toLocaleTimeString()}</p>
+                  </div>
+                );
+              })}
+            </div>
+          ))
         )}
       </div>
     </div>
