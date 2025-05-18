@@ -199,6 +199,7 @@ public class Solution {
         // Show AlertModal
         setAlertData({
           type: 'error',
+          header: 'Compilation Error',
           data: `Compilation Error ${problemName ? `on ${problemName}` : ''}`,
           duration: 6000
         });
@@ -331,6 +332,7 @@ public class Solution {
         // Show AlertModal
         setAlertData({
           type: 'error',
+          header: 'Compilation Error',
           data: `Compilation Error on "${problemName}"`,
           duration: 6000
         });
@@ -406,6 +408,14 @@ public class Solution {
           }),
           credentials: "include"
         });
+        // Show AlertModal
+        setAlertData({
+          type: 'warning',
+          header: 'Wrong Answer',
+          data: `Some test cases failed for "${problemName}". Please check your logic and try again.`,
+          duration: 6000
+        });
+        setShowAlert(true);
       } else {
         // add a correct answer activity on this problem!
         await fetch('http://localhost:5000/user/activities', {
@@ -421,6 +431,14 @@ public class Solution {
           }),
           credentials: "include"
         });
+        // Show AlertModal
+        setAlertData({
+          type: 'success',
+          header: 'Correct Answer!',
+          data: `Well done! You passed all test cases for "${problemName}".`,
+          duration: 5000
+        });
+        setShowAlert(true);
       }
     } catch (err) {
       console.error("Unexpected error during test execution:", err.message);
@@ -461,11 +479,6 @@ public class Solution {
           } catch (error) {
             console.error('error updating user status : ', error);
           }
-          toast.success(`Congrats, You have solved all testcases for ${problemName}!`, {
-            position: 'top-center',
-            autoClose: 5000
-          });
-          // add problem to user's solved!
         }
       } catch (err) {
         console.log("Error cleaning up compiled file:", err.message);
@@ -524,6 +537,7 @@ public class Solution {
               <AlertModal
                 data={alertData.data}
                 type={alertData.type}
+                header={alertData.header}
                 duration={alertData.duration}
                 onClose={() => setShowAlert(false)}
               />
