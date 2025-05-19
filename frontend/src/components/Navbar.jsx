@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { RocketIcon } from './RocketIcon';
 import { User } from 'lucide-react';
+import { toast } from 'react-toastify';
 import { useSocketStore } from '../store/useSocketStore.js'
 
 function Navbar({ isLoggedIn, setIsLoggedIn }) {
@@ -34,6 +35,10 @@ function Navbar({ isLoggedIn, setIsLoggedIn }) {
     if(socket) {
       socket.on('mention', () => {
         setUp();
+        toast.info("You have a new mention!", {
+        position: "top-center",
+        autoClose: 5000, // The toast will be visible for 5 seconds
+      });
       });
 
       return () => {
