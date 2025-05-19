@@ -25,7 +25,7 @@ router.post('/compile', async (req, res) => {
     return res.status(401).send({ output: 'User not signed in.' });
   }
   const userId = req.session.user.id;
-  const { language, code } = req.body;
+  let { language, code } = req.body;
   if (!language || !code) {
     return res.status(400).send({ output: 'Language and code are required.' });
   }
@@ -34,19 +34,22 @@ router.post('/compile', async (req, res) => {
     language === 'cpp'
       ? `${userId}.cpp`
       : language === 'java'
-      ? `${userId}.java`
+      ? `_${userId}.java`
       : `${userId}.py`;
   const execFileName =
     language === 'cpp'
       ? `${userId}.exe`
       : language === 'java'
-      ? `${userId}.class`
+      ? `_${userId}.class`
       : `${userId}.py`;
 
   const filePath = path.join(__codes, filename);
   const compiledFilePath = path.join(__codes, execFileName);
 
   console.log("Writing code to file:", filePath);
+  if (language === 'java') {
+    code = code.replace(/public\s+class\s+Solution/, `public class _${userId}`);
+  }
   fs.writeFileSync(filePath, code);
 
   let compileCmd;
@@ -81,7 +84,7 @@ router.post('/run', (req, res) => {
     language === 'cpp'
       ? `${userId}.exe`
       : language === 'java'
-      ? `${userId}.class`
+      ? `_${userId}.class`
       : `${userId}.py`;
 
   const compiledFilePath = path.normalize(path.join(__codes, execFileName));
@@ -99,7 +102,7 @@ router.post('/run', (req, res) => {
     runCmd = compiledFilePath;
   } else if (language === 'java') {
     runCmd = 'java';
-    processArgs = ['-cp', __codes, 'Solution'];
+    processArgs = ['-cp', __codes, `_${userId}`];
   } else if (language === 'python') {
     runCmd = 'pypy3';
     processArgs = [compiledFilePath];
@@ -199,7 +202,7 @@ router.post('/submit', async (req, res) => {
     language === 'cpp'
       ? `${userId}.exe`
       : language === 'java'
-      ? `${userId}.class`
+      ? `_${userId}.class`
       : `${userId}.py`;
 
   const compiledFilePath = path.normalize(path.join(__codes, execFileName));
@@ -213,7 +216,7 @@ router.post('/submit', async (req, res) => {
 
   const child = spawn(
     language === 'cpp' ? compiledFilePath : language === 'java' ? 'java' : 'pypy3',
-    language === 'java' ? ['-cp', __codes, 'Solution'] : [compiledFilePath],
+    language === 'java' ? ['-cp', __codes, `_${userId}`] : [compiledFilePath],
     { stdio: [fs.openSync(inputFile, 'r'), 'pipe', 'pipe'] }
   );
 
