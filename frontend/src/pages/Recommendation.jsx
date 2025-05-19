@@ -10,6 +10,8 @@ const Recommendation = () => {
     const [groupedProblems, setGroupedProblems] = useState({});
     const [groupedUserSolvedProblems, setGroupedUserSolvedProblems] = useState({});
     const [recommendation, setRecommendation] = useState(null);
+    const [showAlert, setShowAlert] = useState(false);
+    const [alertData, setAlertData] = useState({});
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -25,7 +27,15 @@ const Recommendation = () => {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const data = await fetchProblems();
+                const data = await fetchProblems(() => {
+                    setAlertData({
+                        type: 'error',
+                        header: 'Failed to fetch problems',
+                        data: `Please try again later`,
+                        duration: 6000
+                    })
+                    setShowAlert(true);
+                });
                 setProblems(data);
                 // Group problems by topic
                 const grouped = ProblemManager.groupByTopic(data);
@@ -96,7 +106,15 @@ const Recommendation = () => {
     return (
         <div className="mx-4 mt-8 p-6">
             <h1 className="text-2xl font-bold text-white mb-4">Problem Recommendation</h1>
-
+            {showAlert && (
+                <AlertModal
+                data={alertData.data}
+                type={alertData.type}
+                header={alertData.header}
+                duration={alertData.duration}
+                onClose={() => setShowAlert(false)}
+                />
+            )}
             {/* Recommended Problem */}
             {recommendation ? (
                 <div className="bg-gray-900 p-4 rounded-lg shadow-md text-white">

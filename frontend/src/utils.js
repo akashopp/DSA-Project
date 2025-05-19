@@ -34,7 +34,7 @@ export class ProblemManager {
 }
 
 // Fetch problems from the API
-export const fetchProblems = async () => {
+export const fetchProblems = async (callback = () => { }) => {
     try {
       const response = await fetch('http://localhost:5000/problems', {
         method: "GET", 
@@ -45,6 +45,7 @@ export const fetchProblems = async () => {
         return data;
       } else {
         console.error('Failed to fetch problems');
+        callback();
       }
     } catch (error) {
       console.error('Error fetching problems:', error);

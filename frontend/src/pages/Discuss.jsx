@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import QuestionBox from '../components/discuss/QuestionBox';
 import QuestionBoxSkeleton from '../components/discuss/QuestionBoxSkeleton';
 import NewQuestionModal from '../components/discuss/NewQuestionModal';
+import AlertModal from '../components/AlertModal';
 import { useSocketStore } from '../store/useSocketStore';
 
 function Discuss() {
@@ -17,6 +18,9 @@ function Discuss() {
   const [loading, setLoading] = useState(true);
 
   const [isModalOpen, setModalOpen] = useState(false);
+
+  const [alertData, setAlertData] = useState({});
+  const [showAlert, setShowAlert] = useState(false);
 
   const { socket } = useSocketStore();
 
@@ -89,13 +93,39 @@ function Discuss() {
       credentials: 'include',
     });
 
-    if (!res.ok) throw new Error('Failed to post question');
+    if (!res.ok) {
+      setAlertData({
+        type: 'error',
+        header: 'Failed to add your question',
+        data: `Please try again later`,
+        duration: 6000
+      });
+      setShowAlert(true);
+      throw new Error('Failed to post question');
+    } else {
+      setAlertData({
+        type: 'success',
+        header: 'Success',
+        data: `Your question has been added successfully!`,
+        duration: 6000
+      });
+      setShowAlert(true);
+    }
     // After successful post, fetch questions to update list
     fetchQuestions();
   };
 
   return (
     <div className="p-10 min-h-screen bg-gray-900 text-gray-100 mt-8 mx-4 rounded-lg">
+      {showAlert && (
+        <AlertModal
+          data={alertData.data}
+          type={alertData.type}
+          header={alertData.header}
+          duration={alertData.duration}
+          onClose={() => setShowAlert(false)}
+        />
+      )}
       <NewQuestionModal
         isOpen={isModalOpen}
         onClose={() => setModalOpen(false)}
