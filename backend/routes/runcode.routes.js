@@ -159,7 +159,7 @@ router.delete('/delete-executable', (req, res) => {
     language === 'cpp'
       ? path.join(__codes, `${userId}.exe`)
       : language === 'java'
-      ? path.join(__codes, `${userId}.class`)
+      ? path.join(__codes, `_${userId}.class`)
       : null;
 
   console.log("Attempting to delete file:", compiledFilePath);
