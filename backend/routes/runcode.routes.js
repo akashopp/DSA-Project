@@ -214,11 +214,16 @@ router.post('/submit', async (req, res) => {
     return res.status(400).send({ output: 'Executable file not found. Please compile the code first.' });
   }
 
+  const inputStream = fs.createReadStream(inputFile);
+  
   const child = spawn(
     language === 'cpp' ? compiledFilePath : language === 'java' ? 'java' : 'pypy3',
     language === 'java' ? ['-cp', __codes, `_${userId}`] : [compiledFilePath],
-    { stdio: [fs.openSync(inputFile, 'r'), 'pipe', 'pipe'] }
+    { stdio: ['pipe', 'pipe', 'pipe'] }
   );
+
+  // pipe input.txt into child stdin
+  inputStream.pipe(child.stdin);
 
   const startTime = process.hrtime();
 
