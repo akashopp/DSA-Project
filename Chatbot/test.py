@@ -35,13 +35,22 @@ async def chat(request: ChatRequest):
         chat_completion = client.chat.completions.create(
             model="llama3-70b-8192",
             messages=[
-                {
-                    "role": "user",
-                    "content": request.message,
-                }
+                {"role": "user", "content": request.message}
             ],
         )
-        return {"response": chat_completion.choices[0].message.content}
+
+        content = chat_completion.choices[0].message.content
+
+        # === Optional: Auto-wrap code with markdown fencing ===
+        def wrap_code_blocks(text: str) -> str:
+            if "```" in text:
+                return text  # Already wrapped properly
+            if any(keyword in request.message.lower() for keyword in ["code", "python", "implement", "function", "class"]):
+                return f"```python\n{text.strip()}\n```"
+            return text
+
+        return {"response": wrap_code_blocks(content)}
+
     except Exception as e:
         return {"error": str(e)}
 

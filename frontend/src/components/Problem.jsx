@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import CodeEditor from './CodeEditor';
+import Chatbot from './ChatBot';
 
 const Problem = () => {
   const { problemId } = useParams();
@@ -32,6 +33,7 @@ const Problem = () => {
 
   return (
     <div className="mx-4 px-4 py-6 bg-gray-900 shadow-lg rounded-lg mt-6 text-white">
+      <Chatbot />
       <div className='mx-8 mt-2'>
       <h1 className="text-2xl font-bold text-white mb-4">{problem.problemName}</h1>
       <p className="text-lg"><strong className="text-gray-400">Difficulty:</strong> <span className={difficultyColor}>{problem.difficulty}</span></p>

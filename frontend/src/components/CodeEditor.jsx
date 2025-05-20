@@ -135,6 +135,7 @@ public class Solution {
         setTestCases(data.tests);
       }
     } catch (err) {
+      console.error(err);
       setError("Error fetching test cases.");
     } finally {
       setLoading(false);
@@ -299,6 +300,7 @@ public class Solution {
   
     setTestResults(results);
     let passedAll = true;
+    let tle = false;
     try {
       // Compilation step
       const compileResponse = await fetch("http://localhost:5000/runcode/compile", {
@@ -364,6 +366,11 @@ public class Solution {
   
           if (!response.ok) {
             const responseBody = await response.json();
+            console.log(responseBody.output);
+            console.log('condition: ', responseBody.output === 'Runtime Error: Time Limit Exceeded');
+            if(responseBody.output === 'Runtime Error: Time Limit Exceeded') {
+              tle = true;
+            }
             passedAll = false;
             throw new Error(responseBody.output || "No output provided.");
           }
@@ -400,7 +407,12 @@ public class Solution {
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({
+          body: tle ? JSON.stringify({
+            userId,
+            activityType: 'time_limit_exceeded',
+            activityDescription: `You got a TLE on ${problemName}`,
+            link: `/problem/${problemId}`
+          }) : JSON.stringify({
             userId,
             activityType: 'wrong_answer',
             activityDescription: `You got a wrong answer on ${problemName}`,
@@ -409,7 +421,12 @@ public class Solution {
           credentials: "include"
         });
         // Show AlertModal
-        setAlertData({
+        setAlertData(tle ? {
+          type: 'warning',
+          header: 'Time limit Exceeded',
+          data: `Some test cases crossed the time limit for "${problemName}". Please check your logic and try again.`,
+          duration: 6000
+        } : {
           type: 'warning',
           header: 'Wrong Answer',
           data: `Some test cases failed for "${problemName}". Please check your logic and try again.`,

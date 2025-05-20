@@ -15,7 +15,8 @@ const activitySchema = new mongoose.Schema({
       'compilation_error',
       'replied',
       'asked_question',
-      'mentioned'
+      'mentioned',
+      'time_limit_exceeded',
     ],
   },
   activityDescription: {
