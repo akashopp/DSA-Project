@@ -166,44 +166,57 @@ const Profile = () => {
       </div>
 
       {/* Activities */}
-      <h3 className="text-2xl font-extrabold text-yellow-500 mb-4">Recent Activities</h3>
-      <div>
+      <h3 className="text-2xl font-bold text-white mb-6">Recent Activities</h3>
+      <div className="space-y-8">
         {Object.keys(groupedActivities).length === 0 ? (
-          <p className="text-gray-300">No activities found.</p>
+          <p className="text-gray-400 text-lg">No recent activities found.</p>
         ) : (
           Object.entries(groupedActivities).map(([date, activities]) => (
-            <div key={date} className="mb-8">
-              <h4 className="text-xl font-bold text-white mb-2 border-b border-gray-500 pb-1"> Activities on {date}</h4>
-              {activities.map((activity) => {
-                const { activityType, activityDescription, link, createdAt } = activity;
-                const activityStyles = {
-                  solved: { bg: 'bg-green-600', text: 'text-white' },
-                  wrong_answer: { bg: 'bg-red-600', text: 'text-white' },
-                  compilation_error: { bg: 'bg-yellow-300', text: 'text-black' },
-                  replied: { bg: 'bg-blue-600', text: 'text-white' },
-                  asked_question: { bg: 'bg-purple-700', text: 'text-white' },
-                  mentioned: { bg: 'bg-pink-500', text: 'text-white' },
-                };
-                const { bg, text } = activityStyles[activityType] || { bg: 'bg-gray-600', text: 'text-white' };
+            <div key={date}>
+              <h4 className="text-lg font-semibold text-gray-300 mb-3 border-b border-gray-700 pb-1">
+                {date}
+              </h4>
+              <div className="space-y-4">
+                {activities.map((activity) => {
+                  const { activityType, activityDescription, link, createdAt } = activity;
 
-                return (
-                  <div key={activity._id} className={`p-4 rounded-xl mb-4 ${bg} ${text}`}>
-                    <p className="font-semibold capitalize">{activityType.replace('_', ' ')}</p>
-                    <p className="opacity-90">{activityDescription}</p>
-                    {link && (
-                      <a
-                        href={link}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="underline font-medium"
-                      >
-                        View Link
-                      </a>
-                    )}
-                    <p className="text-sm opacity-80">{new Date(createdAt).toLocaleTimeString()}</p>
-                  </div>
-                );
-              })}
+                  // Define styles
+                  const activityStyles = {
+                    solved: "border-green-500",
+                    wrong_answer: "border-red-500",
+                    compilation_error: "border-yellow-400",
+                    replied: "border-blue-400",
+                    asked_question: "border-purple-400",
+                    mentioned: "border-pink-400",
+                  };
+                  const borderColor = activityStyles[activityType] || "border-gray-600";
+
+                  return (
+                    <div
+                      key={activity._id}
+                      className={`border-l-4 ${borderColor} bg-gray-800 rounded-md px-4 py-3 shadow-sm hover:shadow-md hover:border-l-8 transition-[border] duration-150`}
+                    >
+                      <div className="flex justify-between items-center mb-1">
+                        <p className="text-sm font-medium text-gray-100 capitalize">
+                          {activityType.replace("_", " ")}
+                        </p>
+                        <span className="text-xs text-gray-400">{new Date(createdAt).toLocaleTimeString()}</span>
+                      </div>
+                      <p className="text-sm text-gray-300">{activityDescription}</p>
+                      {link && (
+                        <a
+                          href={link}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-sm text-blue-400 underline mt-1 inline-block"
+                        >
+                          View Link
+                        </a>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           ))
         )}
